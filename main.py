@@ -55,9 +55,13 @@ try:
             rawframe_rgb = picam2.capture_array()
             rawframe_bgr = cv2.cvtColor(rawframe_rgb, cv2.COLOR_RGB2BGR)
         selectionMask = cv2.inRange(cv2.cvtColor(rawframe_bgr,cv2.COLOR_BGR2HSV),np.array([10,120,129]),np.array([40,255,255]))
-        cv2.imshow('input', rawframe_bgr)
-        cv2.imshow("output", selectionMask)
-        # TODO here
+        cv2.imshow("raw frame", rawframe_bgr)
+        cv2.imshow("raw frame selection", selectionMask)
+        
+        # TODO project and crop image
+        # TODO get ball position from projected image
+        # TODO send ball position via output function
+        #output_position(x, y)
             
         # Calculate and print FPS:
         currentTime_unix = time.time()
