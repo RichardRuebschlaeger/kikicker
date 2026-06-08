@@ -54,7 +54,7 @@ try:
         else:
             rawframe_rgb = picam2.capture_array()
             rawframe_bgr = cv2.cvtColor(rawframe_rgb, cv2.COLOR_RGB2BGR)
-            detect_ball(rawframe_bgr, True)     # Must be true for first/only frame, can be false afterwards TODO Zain
+        detect_ball(rawframe_bgr, True)     # Must be true for first/only frame, can be false afterwards TODO Zain
             
         # Calculate and print FPS:
         currentTime_unix = time.time()
