@@ -7,9 +7,10 @@ Created on Mon Jun  8 17:39:50 2026
 """
 import cv2
 import numpy as np
+from ball_detector_calibration import calculateProjectionMatrix
 from output import output_position
 
-def detect_ball(rawframe_bgr, calibration):
+def detect_ball(rawframe_bgr, calibration, fieldSize_100µm=(None,None)):
     """
     
 
@@ -21,24 +22,23 @@ def detect_ball(rawframe_bgr, calibration):
     calibration : TYPE
         Calibration refers to the (re-) calculation of the projection matrix used to level the playing field image.
         Set to true to (re-) calculate; set to false to use a previously calculated one (if it exists); or set to matrix to be used instead.
-
+    fieldSize_100µm : tuple(int, int), optional
+        The size of the playing field measures in steps of 100 micrometers. The default is (12000, 6800) or 120cm x 68cm.
+        Used for calibration and to calculate the size of intermediate images.
 
     Returns
     -------
     None.
     
-    
     Important Links
     ---------------
     https://docs.opencv.org/4.13.0/da/d6e/tutorial_py_geometric_transformations.html
     https://learnopencv.com/find-center-of-blob-centroid-using-opencv-cpp-python/
-
     """
     if type(calibration)==bool:
+        global cameraCalibrationMatrix
         if calibration:
-            TODO
-        else:
-            global cameraCalibrationMatrix
+            cameraCalibrationMatrix = calculateProjectionMatrix(rawframe_bgr, fieldSize_100µm)
     #elif type()==:#TODO
     #    cameraCalibrationMatrix = calibration
     
@@ -47,8 +47,8 @@ def detect_ball(rawframe_bgr, calibration):
     cv2.imshow("raw frame", rawframe_bgr)
     cv2.imshow("raw frame selection", rawSelectionMask)
     
-    # TODO project and crop image
-    projectedFrame_bgr = cv2.warpPerspective(rawframe_bgr, cameraCalibrationMatrix, NEW SIZE);
+    # Project and crop image:
+    projectedFrame_bgr = cv2.warpPerspective(rawframe_bgr, cameraCalibrationMatrix, fieldSize_100µm);   # Default field size makes this 233 MiB large
     cv2.imshow("projected frame", projectedFrame_bgr)
     
     # Get ball position from projected image:
@@ -58,5 +58,5 @@ def detect_ball(rawframe_bgr, calibration):
     x = int(M["m10"] / M["m00"])
     y = int(M["m01"] / M["m00"])
     
-    # Send ball position via output function
+    # Send ball position via output function:
     output_position(x, y)
