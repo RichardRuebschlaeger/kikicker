@@ -3,7 +3,7 @@ from picamera2 import Picamera2
 import cv2
 import time
 import numpy as np
-from output import output_position
+from ball_detector import detect_ball
 
 USBCam = False
 
@@ -54,14 +54,7 @@ try:
         else:
             rawframe_rgb = picam2.capture_array()
             rawframe_bgr = cv2.cvtColor(rawframe_rgb, cv2.COLOR_RGB2BGR)
-        selectionMask = cv2.inRange(cv2.cvtColor(rawframe_bgr,cv2.COLOR_BGR2HSV),np.array([10,120,129]),np.array([40,255,255]))
-        cv2.imshow("raw frame", rawframe_bgr)
-        cv2.imshow("raw frame selection", selectionMask)
-        
-        # TODO project and crop image
-        # TODO get ball position from projected image
-        # TODO send ball position via output function
-        #output_position(x, y)
+            detect_ball(rawframe_bgr, True)     # Must be true for first/only frame, can be false afterwards TODO Zain
             
         # Calculate and print FPS:
         currentTime_unix = time.time()
