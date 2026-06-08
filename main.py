@@ -1,76 +1,94 @@
-# Note to self: install through: sudo apt install python3-picamera2 python3-opencv
-from picamera2 import Picamera2
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Main entry point for ball tracking system.
+"""
+
 import cv2
-import time
-import numpy as np
+from camera_handler import CameraHandler
 from ball_detector import detect_ball
 
-USBCam = False
 
-# Try USB-Camera first:
-cap = cv2.VideoCapture(1, cv2.CAP_V4L2)
-#if False:
-if cap.isOpened():
-    # MS LifeCam Camera via USB
-    USBCam = True
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH,320)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT,240)
-    #cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)
-    #cap.set(cv2.CAP_PROP_FPS,60)
-    print( cap.get( cv2.CAP_PROP_FRAME_WIDTH ) )
-    print( cap.get( cv2.CAP_PROP_FRAME_HEIGHT ) )
-else:
-    #Internal PiCam:
-    picam2 = Picamera2();  print(picam2.sensor_modes)
-    # for Raspberry Pi Camera V2.1:
-    #config = picam2.create_preview_configuration(
-    #    raw=picam2.sensor_modes[5],
-    #    main={"size": (320, 240)},
-    #    controls={"FrameRate":104.0}  # Set desired frame rate
-    #)
-    # for Raspberry Pi Camera V3:
-    config = picam2.create_preview_configuration(
-        raw=picam2.sensor_modes[0],
-        #main={"size": (1536, 864)},
-        #main={"size": (768, 432)},
-        main={"size": (384, 216)},
-        controls={"FrameRate":120.13}
-        )
-    picam2.configure(config)
-    picam2.start()
-
-# Prepare FPS-counter:
-frame_count = 0                                                                # Frame counter, 0 before first frame
-lastResetTime_unix = time.time()                                               # The time when the counter was reset
-lastResetFrames = 0                                                            # The value of the counter at the last reset
-try:
-    while True:
-        frame_count += 1
-        if USBCam:
-            ret, rawframe_bgr = cap.read()
-            if not ret:
-                print("oops")
-                break
-        else:
-            rawframe_rgb = picam2.capture_array()
-            rawframe_bgr = cv2.cvtColor(rawframe_rgb, cv2.COLOR_RGB2BGR)
-            detect_ball(rawframe_bgr, True)     # Must be true for first/only frame, can be false afterwards TODO Zain
-            
-        # Calculate and print FPS:
-        currentTime_unix = time.time()
-        elapsedTime_unix = currentTime_unix - lastResetTime_unix
-        if elapsedTime_unix > 1.0:
-            fps = (frame_count - lastResetFrames) / elapsedTime_unix
-            print(f"FPS: {fps:.2f}");
-            lastResetTime_unix = currentTime_unix
-            lastResetFrames = frame_count
-        
-        # Exit program loop:
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-finally:
-    if USBCam:
-        cap.release()
+def process_frame(frame, frame_number):
+    """
+    Process a single frame for ball detection.
+    
+    Parameters
+    ----------
+    frame : numpy.ndarray
+        The image frame to process
+    frame_number : int
+        Frame number (0-indexed)
+    """
+    # Must be true for first/only frame, can be false afterwards
+    if frame_number == 0:
+        print("Calibrating on first frame...")
+        detect_ball(frame, calibrate=True)
     else:
-        picam2.stop()
+        detect_ball(frame, calibrate=False)
+
+
+def main():
+    """Main program loop."""
+    # Auto-detect camera type (switch case style)
+    camera_type = None
+    
+    # Try USB first
+    test_usb = cv2.VideoCapture(1, cv2.CAP_V4L2)
+    if test_usb.isOpened():
+        camera_type = 'usb'
+        test_usb.release()
+        print("USB camera detected")
+    else:
+        camera_type = 'picam'
+        print("PiCamera detected")
+    
+    # Initialize camera
+    camera = CameraHandler(camera_type=camera_type, frame_width=320, frame_height=240)
+    
+    if not camera.initialize():
+        print("Failed to initialize camera")
+        return
+    
+    print("\nOptions:")
+    print("  1. Capture single frame only")
+    print("  2. Capture continuous frames")
+    print("  3. Capture limited frames (e.g., 100 frames)")
+    
+    choice = input("\nSelect option (1/2/3): ").strip()
+    
+    if choice == '1':
+        # Capture single frame only
+        print("\nCapturing single frame...")
+        frame = camera.capture_single()
+        if frame is not None:
+            process_frame(frame, 0)
+        else:
+            print("Failed to capture frame")
+            
+    elif choice == '2':
+        # Capture continuous frames
+        print("\nCapturing continuous frames. Press Ctrl+C to stop.")
+        camera.capture_continuous(process_frame, max_frames=None)
+        
+    elif choice == '3':
+        # Capture limited frames
+        try:
+            num_frames = int(input("Enter number of frames to capture: "))
+            print(f"\nCapturing {num_frames} frames...")
+            camera.capture_continuous(process_frame, max_frames=num_frames)
+        except ValueError:
+            print("Invalid number, using default 100 frames")
+            camera.capture_continuous(process_frame, max_frames=100)
+    
+    else:
+        print("Invalid option")
+    
+    # Cleanup
+    camera.release()
     cv2.destroyAllWindows()
+    print("Program terminated")
+
+
+if __name__ == "__main__":
+    main()
