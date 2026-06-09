@@ -1,10 +1,20 @@
+
 """
-Camera handler for USB and PiCamera with FPS tracking.
+Camera handler for USB, PiCamera, or test image.
+Works on Mac (for testing) and Raspberry Pi (deployment).
 """
 
 import cv2
 import time
-from picamera2 import Picamera2
+
+# Try to import picamera2 (only available on Raspberry Pi)
+try:
+    from picamera2 import Picamera2
+    PICAMERA_AVAILABLE = True
+    print("PiCamera2 module loaded (Raspberry Pi mode)")
+except ImportError:
+    PICAMERA_AVAILABLE = False
+    print("PiCamera2 not available (Mac testing mode)")
 
 
 class CameraHandler:
@@ -17,9 +27,9 @@ class CameraHandler:
         camera_type : str or None
             'usb', 'picam', or None for auto-detection
         frame_width : int
-            Frame width (default 384 for PiCam compatibility)
+            Frame width (default 384)
         frame_height : int
-            Frame height (default 216 for PiCam compatibility)
+            Frame height (default 216)
         """
         self.camera_type = camera_type
         self.frame_width = frame_width
@@ -43,18 +53,30 @@ class CameraHandler:
             cap.release()
             if ret:
                 return 'usb'
-        return 'picam'
+        
+        # If PiCamera is available, use it
+        if PICAMERA_AVAILABLE:
+            return 'picam'
+        
+        # On Mac with no camera, use None (will use test image)
+        print("No camera detected. Use --image flag to load a test image.")
+        return None
     
     def initialize(self):
         """Initialize camera based on type."""
         # Auto-detect if not specified
         if self.camera_type is None:
             self.camera_type = self._detect_camera_type()
-            print(f"Auto-detected camera: {self.camera_type}")
+            if self.camera_type:
+                print(f"Auto-detected camera: {self.camera_type}")
+            else:
+                print("No camera available")
+                return False
         
         if self.camera_type == 'usb':
             self.cap = cv2.VideoCapture(1, cv2.CAP_V4L2)
             if not self.cap.isOpened():
+                print("Failed to open USB camera")
                 return False
             
             # Set frame size
@@ -74,6 +96,10 @@ class CameraHandler:
             return True
             
         elif self.camera_type == 'picam':
+            if not PICAMERA_AVAILABLE:
+                print("PiCamera not available on this system")
+                return False
+                
             self.picam2 = Picamera2()
             print(self.picam2.sensor_modes)
             
@@ -98,9 +124,12 @@ class CameraHandler:
                 print("Failed to capture from USB camera")
                 return None
             return frame
-        else:
+        elif self.camera_type == 'picam' and self.picam2:
             rgb = self.picam2.capture_array()
             return cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+        else:
+            print("No camera available for capture")
+            return None
     
     def capture_continuous(self, callback, max_frames=None):
         """
