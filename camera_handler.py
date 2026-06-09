@@ -1,20 +1,32 @@
-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Camera handler for USB, PiCamera, or test image.
-Works on Mac (for testing) and Raspberry Pi (deployment).
+Works on Mac (testing) and Raspberry Pi (deployment).
 """
 
 import cv2
 import time
 
-# Try to import picamera2 (only available on Raspberry Pi)
-try:
-    from picamera2 import Picamera2
-    PICAMERA_AVAILABLE = True
-    print("PiCamera2 module loaded (Raspberry Pi mode)")
-except ImportError:
-    PICAMERA_AVAILABLE = False
-    print("PiCamera2 not available (Mac testing mode)")
+# Don't import picamera2 at module level - it will crash on Mac
+# We'll import it only when needed inside functions
+
+# Flag to check if we're on Raspberry Pi
+PICAMERA_AVAILABLE = False
+
+
+def check_picamera():
+    """Check if picamera2 is available (only on Raspberry Pi)."""
+    global PICAMERA_AVAILABLE
+    if not PICAMERA_AVAILABLE:
+        try:
+            from picamera2 import Picamera2
+            PICAMERA_AVAILABLE = True
+            print("PiCamera2 module loaded (Raspberry Pi mode)")
+        except ImportError:
+            PICAMERA_AVAILABLE = False
+            print("PiCamera2 not available (Mac testing mode)")
+    return PICAMERA_AVAILABLE
 
 
 class CameraHandler:
@@ -55,7 +67,7 @@ class CameraHandler:
                 return 'usb'
         
         # If PiCamera is available, use it
-        if PICAMERA_AVAILABLE:
+        if check_picamera():
             return 'picam'
         
         # On Mac with no camera, use None (will use test image)
@@ -96,10 +108,13 @@ class CameraHandler:
             return True
             
         elif self.camera_type == 'picam':
-            if not PICAMERA_AVAILABLE:
+            if not check_picamera():
                 print("PiCamera not available on this system")
                 return False
-                
+            
+            # Import picamera2 only when we're sure we need it and it's available
+            from picamera2 import Picamera2
+            
             self.picam2 = Picamera2()
             print(self.picam2.sensor_modes)
             
