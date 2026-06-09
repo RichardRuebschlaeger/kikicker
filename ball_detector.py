@@ -60,3 +60,5 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
     
     # Send ball position via output function:
     output_position(x, y)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
