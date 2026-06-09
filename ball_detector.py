@@ -7,10 +7,10 @@ Created on Mon Jun  8 17:39:50 2026
 """
 import cv2
 import numpy as np
-from ball_detector_calibration import calculateProjectionMatrix
 from output import output_position
+from ball_detector_calibration import calculateProjectionMatrix
 
-def detect_ball(rawframe_bgr, calibration, fieldSize_100µm=(1200,680)):
+def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
     """
     
 
@@ -23,7 +23,7 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_100µm=(1200,680)):
         Calibration refers to the (re-) calculation of the projection matrix used to level the playing field image.
         Set to true to (re-) calculate; set to false to use a previously calculated one (if it exists); or set to matrix to be used instead.
     fieldSize_100µm : tuple(int, int), optional
-        The size of the playing field measures in steps of 100 micrometers. The default is (12000, 6800) or 120cm x 68cm.
+        The size of the playing field measures in millimeters. The default is (1200, 680) or 120cm x 68cm.
         Used for calibration and to calculate the size of intermediate images.
 
     Returns
@@ -38,7 +38,7 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_100µm=(1200,680)):
     if type(calibration)==bool:
         global cameraCalibrationMatrix
         if calibration:
-            cameraCalibrationMatrix = calculateProjectionMatrix(rawframe_bgr, fieldSize_100µm)#TODO: MAybe wrong size? 
+            cameraCalibrationMatrix = calculateProjectionMatrix(rawframe_bgr, fieldSize_mm)#TODO: MAybe wrong size? 
     #elif type()==:#TODO
     #    cameraCalibrationMatrix = calibration
     
@@ -48,7 +48,7 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_100µm=(1200,680)):
     cv2.imshow("raw frame selection", rawSelectionMask)
     
     # Project and crop image: #TODO: Crashes afterwards
-    projectedFrame_bgr = cv2.warpPerspective(rawframe_bgr, cameraCalibrationMatrix, fieldSize_100µm);   # Default field size makes this 233 MiB large
+    projectedFrame_bgr = cv2.warpPerspective(rawframe_bgr, cameraCalibrationMatrix, fieldSize_mm);   # Default field size makes this 233 MiB large
     cv2.imshow("projected frame", projectedFrame_bgr)
     
     # Get ball position from projected image:
