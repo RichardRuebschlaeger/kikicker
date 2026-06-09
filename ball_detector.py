@@ -10,7 +10,7 @@ import numpy as np
 from ball_detector_calibration import calculateProjectionMatrix
 from output import output_position
 
-def detect_ball(rawframe_bgr, calibration, fieldSize_100µm=(12000,6800)):
+def detect_ball(rawframe_bgr, calibration, fieldSize_100µm=(1200,680)):
     """
     
 
