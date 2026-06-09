@@ -2,214 +2,106 @@
 # -*- coding: utf-8 -*-
 """
 Camera handler for USB, PiCamera, or test image.
-Works on Mac (testing) and Raspberry Pi (deployment).
 """
 
 import cv2
 import time
 
-# Don't import picamera2 at module level - it will crash on Mac
-# We'll import it only when needed inside functions
-
-# Flag to check if we're on Raspberry Pi
-PICAMERA_AVAILABLE = False
-
-
-def check_picamera():
-    """Check if picamera2 is available (only on Raspberry Pi)."""
-    global PICAMERA_AVAILABLE
-    if not PICAMERA_AVAILABLE:
-        try:
-            from picamera2 import Picamera2
-            PICAMERA_AVAILABLE = True
-            print("PiCamera2 module loaded (Raspberry Pi mode)")
-        except ImportError:
-            PICAMERA_AVAILABLE = False
-            print("PiCamera2 not available (Mac testing mode)")
-    return PICAMERA_AVAILABLE
+# Try to import picamera2 (only works on Raspberry Pi)
+try:
+    from picamera2 import Picamera2
+    PICAMERA_AVAILABLE = True
+except ImportError:
+    PICAMERA_AVAILABLE = False
 
 
 class CameraHandler:
-    def __init__(self, camera_type=None, frame_width=384, frame_height=216):
-        """
-        Initialize camera handler.
-        
-        Parameters
-        ----------
-        camera_type : str or None
-            'usb', 'picam', or None for auto-detection
-        frame_width : int
-            Frame width (default 384)
-        frame_height : int
-            Frame height (default 216)
-        """
+    def __init__(self, camera_type=None, frame_width=384, frame_height=216, image_path=None):
         self.camera_type = camera_type
         self.frame_width = frame_width
         self.frame_height = frame_height
+        self.image_path = image_path
+        self.test_image = None
         self.cap = None
         self.picam2 = None
         
-        # FPS tracking variables
+        # FPS tracking
         self.frame_count = 0
         self.last_reset_time = time.time()
         self.last_reset_frames = 0
         self.current_fps = 0.0
         
-    def _detect_camera_type(self):
-        """Auto-detect available camera without releasing."""
-        # Try USB camera first
-        cap = cv2.VideoCapture(1, cv2.CAP_V4L2)
-        if cap.isOpened():
-            # Test read to ensure it's working
-            ret, _ = cap.read()
-            cap.release()
-            if ret:
-                return 'usb'
-        
-        # If PiCamera is available, use it
-        if check_picamera():
-            return 'picam'
-        
-        # On Mac with no camera, use None (will use test image)
-        print("No camera detected. Use --image flag to load a test image.")
-        return None
-    
     def initialize(self):
         """Initialize camera based on type."""
-        # Auto-detect if not specified
-        if self.camera_type is None:
-            self.camera_type = self._detect_camera_type()
-            if self.camera_type:
-                print(f"Auto-detected camera: {self.camera_type}")
-            else:
-                print("No camera available")
-                return False
         
+        # Image mode
+        if self.camera_type == 'image':
+            self.test_image = cv2.imread(self.image_path)
+            if self.test_image is not None:
+                self.test_image = cv2.resize(self.test_image, (self.frame_width, self.frame_height))
+                print(f"Image loaded: {self.image_path}")
+                return True
+            print(f"Failed to load image: {self.image_path}")
+            return False
+        
+        # USB camera
         if self.camera_type == 'usb':
             self.cap = cv2.VideoCapture(1, cv2.CAP_V4L2)
-            if not self.cap.isOpened():
-                print("Failed to open USB camera")
-                return False
-            
-            # Set frame size
-            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.frame_width)
-            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.frame_height)
-            
-            # Verify actual frame size
-            actual_width = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-            actual_height = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-            
-            print(f"USB Camera initialized: requested {self.frame_width}x{self.frame_height}")
-            print(f"Actual: {actual_width}x{actual_height}")
-            
-            # Update dimensions to actual values
-            self.frame_width = int(actual_width)
-            self.frame_height = int(actual_height)
-            return True
-            
-        elif self.camera_type == 'picam':
-            if not check_picamera():
-                print("PiCamera not available on this system")
-                return False
-            
-            # Import picamera2 only when we're sure we need it and it's available
-            from picamera2 import Picamera2
-            
-            self.picam2 = Picamera2()
-            print(self.picam2.sensor_modes)
-            
-            # Use original dimensions for PiCam
-            config = self.picam2.create_preview_configuration(
-                raw=self.picam2.sensor_modes[0],
-                main={"size": (self.frame_width, self.frame_height)},
-                controls={"FrameRate": 120.13}
-            )
-            self.picam2.configure(config)
-            self.picam2.start()
-            print(f"PiCamera initialized: {self.frame_width}x{self.frame_height}")
-            return True
-            
-        return False
+            if self.cap.isOpened():
+                self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.frame_width)
+                self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.frame_height)
+                print(f"USB Camera initialized")
+                return True
+            print("USB Camera failed")
+            return False
+        
+        # PiCamera
+        if self.camera_type == 'picam':
+            if PICAMERA_AVAILABLE:
+                self.picam2 = Picamera2()
+                config = self.picam2.create_preview_configuration(
+                    main={"size": (self.frame_width, self.frame_height)}
+                )
+                self.picam2.configure(config)
+                self.picam2.start()
+                print(f"PiCamera initialized")
+                return True
+            print("PiCamera not available")
+            return False
+        
+        # Auto-detect
+        if self.camera_type is None:
+            # Try USB first
+            test_cap = cv2.VideoCapture(1, cv2.CAP_V4L2)
+            if test_cap.isOpened():
+                test_cap.release()
+                return self.initialize(camera_type='usb')
+            # Then PiCamera
+            if PICAMERA_AVAILABLE:
+                return self.initialize(camera_type='picam')
+            print("No camera found")
+            return False
     
     def capture(self):
         """Capture a single frame."""
-        if self.camera_type == 'usb':
+        if self.test_image is not None:
+            return self.test_image.copy()
+        
+        if self.cap is not None:
             ret, frame = self.cap.read()
-            if not ret:
-                print("Failed to capture from USB camera")
-                return None
-            return frame
-        elif self.camera_type == 'picam' and self.picam2:
+            return frame if ret else None
+        
+        if self.picam2 is not None:
             rgb = self.picam2.capture_array()
             return cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
-        else:
-            print("No camera available for capture")
-            return None
-    
-    def capture_continuous(self, callback, max_frames=None):
-        """
-        Capture continuous frames and process with callback.
         
-        Parameters
-        ----------
-        callback : function
-            Function to call with each frame (receives frame and frame_number)
-        max_frames : int or None
-            Maximum number of frames to capture (None for infinite)
-        """
-        frame_number = 0
-        self.frame_count = 0
-        self.last_reset_time = time.time()
-        self.last_reset_frames = 0
-        
-        try:
-            while True:
-                frame = self.capture()
-                if frame is None:
-                    break
-                
-                # Call callback with frame
-                callback(frame, frame_number)
-                
-                # Update FPS
-                self.update_fps()
-                
-                frame_number += 1
-                
-                # Check if we've reached max frames
-                if max_frames and frame_number >= max_frames:
-                    print(f"Captured {max_frames} frames, stopping")
-                    break
-                    
-        except KeyboardInterrupt:
-            print("\nCapture interrupted by user")
+        return None
     
     def capture_single(self):
-        """Capture and return a single frame."""
         return self.capture()
     
-    def update_fps(self):
-        """Update FPS calculation and print if 1 second has passed."""
-        self.frame_count += 1
-        current_time = time.time()
-        elapsed_time = current_time - self.last_reset_time
-        
-        if elapsed_time > 1.0:
-            self.current_fps = (self.frame_count - self.last_reset_frames) / elapsed_time
-            print(f"FPS: {self.current_fps:.2f}")
-            self.last_reset_time = current_time
-            self.last_reset_frames = self.frame_count
-        
-        return self.current_fps
-    
-    def get_fps(self):
-        """Get current FPS value."""
-        return self.current_fps
-    
     def release(self):
-        """Release camera resources."""
         if self.cap:
             self.cap.release()
         if self.picam2:
             self.picam2.stop()
-        print("Camera released")
