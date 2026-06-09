@@ -38,7 +38,7 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
     if type(calibration)==bool:
         global cameraCalibrationMatrix
         if calibration:
-            cameraCalibrationMatrix = calculateProjectionMatrix(rawframe_bgr, fieldSize_mm)#TODO: MAybe wrong size? 
+            cameraCalibrationMatrix = np.eye(3)#calculateProjectionMatrix(rawframe_bgr, fieldSize_mm)#TODO: MAybe wrong size? 
     #elif type()==:#TODO
     #    cameraCalibrationMatrix = calibration
     

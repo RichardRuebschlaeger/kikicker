@@ -30,7 +30,7 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
     """
     # Calculate corners in the raw frame:
     # NOTE: No guarantee for exactly 4 results, but should be (unless camera excessively tilted)
-    grey = cv2.cvtColor(rawframe_bgr, cv2.BGR2GRAY)
+    grey = cv2.cvtColor(rawframe_bgr, cv2.BGR2GREY)
     _, gray = cv2.threshold(grey, 127, 255, 0)
     im2, src, _ = cv2.findContours(gray, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     assert len(src) == 4, f"Got {len(src)} field corners, but should be exactly 4"
