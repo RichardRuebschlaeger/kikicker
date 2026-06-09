@@ -48,7 +48,7 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
     cv2.imshow("raw frame selection", rawSelectionMask)
     
     # Project and crop image: #TODO: Crashes afterwards
-    projectedFrame_bgr = cv2.warpPerspective(rawframe_bgr, cameraCalibrationMatrix, fieldSize_mm);   # Default field size makes this 233 MiB large
+    projectedFrame_bgr = cv2.warpPerspective(rawframe_bgr, cameraCalibrationMatrix, fieldSize_mm);
     cv2.imshow("projected frame", projectedFrame_bgr)
     
     # Get ball position from projected image:
