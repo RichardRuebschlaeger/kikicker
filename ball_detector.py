@@ -10,7 +10,7 @@ import numpy as np
 from ball_detector_calibration import calculateProjectionMatrix
 from output import output_position
 
-def detect_ball(rawframe_bgr, calibration, fieldSize_100µm=(None,None)):
+def detect_ball(rawframe_bgr, calibration, fieldSize_100µm=(12000,6800)):
     """
     
 
@@ -38,7 +38,7 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_100µm=(None,None)):
     if type(calibration)==bool:
         global cameraCalibrationMatrix
         if calibration:
-            cameraCalibrationMatrix = calculateProjectionMatrix(rawframe_bgr, fieldSize_100µm)
+            cameraCalibrationMatrix = calculateProjectionMatrix(rawframe_bgr, fieldSize_100µm)#TODO: MAybe wrong size? 
     #elif type()==:#TODO
     #    cameraCalibrationMatrix = calibration
     
@@ -47,7 +47,7 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_100µm=(None,None)):
     cv2.imshow("raw frame", rawframe_bgr)
     cv2.imshow("raw frame selection", rawSelectionMask)
     
-    # Project and crop image:
+    # Project and crop image: #TODO: Crashes afterwards
     projectedFrame_bgr = cv2.warpPerspective(rawframe_bgr, cameraCalibrationMatrix, fieldSize_100µm);   # Default field size makes this 233 MiB large
     cv2.imshow("projected frame", projectedFrame_bgr)
     
