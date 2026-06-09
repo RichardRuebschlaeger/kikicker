@@ -28,21 +28,9 @@ def process_frame(frame, frame_number):
 
 def main():
     """Main program loop."""
-    # Auto-detect camera type (switch case style)
-    camera_type = None
-    
-    # Try USB first
-    test_usb = cv2.VideoCapture(1, cv2.CAP_V4L2)
-    if test_usb.isOpened():
-        camera_type = 'usb'
-        test_usb.release()
-        print("USB camera detected")
-    else:
-        camera_type = 'picam'
-        print("PiCamera detected")
-    
-    # Initialize camera
-    camera = CameraHandler(camera_type=camera_type, frame_width=320, frame_height=240)
+    # Initialize camera (auto-detects USB or PiCam)
+    # Using same frame size as original PiCam setup (384x216)
+    camera = CameraHandler(camera_type=None, frame_width=384, frame_height=216)
     
     if not camera.initialize():
         print("Failed to initialize camera")
