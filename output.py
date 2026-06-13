@@ -6,16 +6,16 @@ Created on Mon Jun  1 14:47:49 2026
 @author: richard
 """
 
-def output_position(x, y)->None:
+def output_position(ballpos_mm, fieldSize_mm)->None:
     """
     TODO: Output via I2C
     
     Parameters
     ----------
-    x : TYPE
-        ball x-coordinate.
-    y : TYPE
-        Ball y-coordinate.
+    ballpos_mm : tuple(int, int)
+        The current ball position measured in millimeters from the center position
+    fieldSize_mm : tuple(int, int)
+        The size of the playing field measures in millimeters. The default is (1200, 680) or 120cm x 68cm.
 
     Returns
     -------
@@ -23,6 +23,6 @@ def output_position(x, y)->None:
 
     """
     # Write output to command line:
-    print(f"Ball at x={x} y={y}")
+    print(f"Ball at x={ballpos_mm[0]} y={ballpos_mm[1]}")
     
     # TODO Output via I2C:
