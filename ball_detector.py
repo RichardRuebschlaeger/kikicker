@@ -12,7 +12,7 @@ from ball_detector_calibration import calculateProjectionMatrix
 
 def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
     """
-    Calculates the position of at most one orange ball on the playing field. The position aligned to the center of the playing field.
+    Calculates the position of at most one orange ball on the playing field. The position relative to the center of the playing field.
     White/left is negative x and black/right is positive x. Top half is negative y and bottom half is positive y.
 
     Parameters
@@ -69,5 +69,5 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
     output_position(ballpos, fieldSize_mm)
     
     # TODO: What are these for?
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
