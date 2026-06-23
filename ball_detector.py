@@ -69,5 +69,5 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
     output_position(ballpos, fieldSize_mm)
     
     # TODO: What are these for?
-    #cv2.waitKey(0)
-    #cv2.destroyAllWindows()
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()

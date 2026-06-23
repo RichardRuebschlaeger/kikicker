@@ -84,6 +84,8 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
                     aw = (sh0-i) + (sh1-j)
                     if aw < kur[2]:
                         kur = (i, j, aw)
+    Getting HSV-Values:
+        https://phayuth.github.io/tools/image_hsv_segmenter.html
     
     Cropping:
         https://opencv.org/cropping-an-image-using-opencv/
@@ -93,15 +95,17 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
     
     NOTES TO SELF:
         Access images as yx, but points are xy
+        xx,yy are in image coordinates, x,y are offsets from corner
     """
     
     """Calculate the corners of the playing field walls:"""
     #TODO
     
     
+    rawframe_hsv = cv2.cvtColor(rawframe_bgr, cv2.COLOR_BGR2HSV)
+    
+    
     """Calculate the corners of the playing field:"""
-    # xx,yy are in frame coordinates, x,y are offsets from corner
-    # Access images as [y,x], but points are xy
     # Detecting field corners by testing for minimum Manhattan distance within a detectDistanceX x detectDistanceY px area from the field wall corners towards the center
     detectDistanceX = 20
     detectDistanceY = 20
@@ -110,18 +114,23 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
     tlw = (75, 52)
     blw = (67, 184)
     trw = (306, 64)
-    brw = (304, 198)
+    brw = (305, 198)
     
-    #rawSelectionMask2 = cv2.inRange(cv2.cvtColor(rawframe_bgr,cv2.COLOR_BGR2HSV),np.array([35,0,57]),np.array([120,115,120]))
-    #cv2.imshow("raw frame 2", rawSelectionMask2)
+    # Selection based on color:
+    imgray = cv2.inRange(rawframe_hsv, np.array([35,0,57]), np.array([120,115,147]))
+    #kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)) #No benefit from morphological closing (tested)
+    #imgray = cv2.erode(imgray, kernel)
+    #imgray = cv2.dilate(imgray, kernel)
+    cv2.imshow("imgray", imgray)
     
-    # Convert frame to grayscale:
+    # Selection based on brightness:
+    """ KNOWN GOOD CODE, use instead of above section
     imgray = cv2.cvtColor(rawframe_bgr, cv2.COLOR_BGR2GRAY)
     _, imgray = cv2.threshold(imgray, 110, 255, cv2.THRESH_BINARY_INV)
     #kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3)) #No benefit from morphological closing (tested)
     #imgray = cv2.dilate(imgray, kernel)
     #imgray = cv2.erode(imgray, kernel)
-    #cv2.imshow("imgray", imgray)
+    #cv2.imshow("imgray", imgray)"""
     
     # Get TLF corner:
     #cropped = imgray[tlw[1]:, tlw[0]:]
@@ -177,7 +186,7 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
             if imgray[yy, xx] and currentMD < shortestManhattanDistance:
                 brf = (xx, yy)
                 shortestManhattanDistance = currentMD
-                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
+                print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
     
     #cv2.imshow("cropped", cropped)
     #return np.eye(3)
