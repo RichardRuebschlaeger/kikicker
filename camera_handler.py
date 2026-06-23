@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Camera handler for USB, PiCamera, or test image.
 """
@@ -99,7 +97,58 @@ class CameraHandler:
     
     def capture_single(self):
         return self.capture()
-    
+
+    def _update_fps(self):
+        """Update the FPS counter."""
+        self.frame_count += 1
+        now = time.time()
+        elapsed = now - self.last_reset_time
+        if elapsed >= 1.0:
+            self.current_fps = (self.frame_count - self.last_reset_frames) / elapsed
+            self.last_reset_time = now
+            self.last_reset_frames = self.frame_count
+
+    def capture_continuous(self, callback, max_frames=None):
+        """
+        Capture frames continuously and call callback for each one.
+
+        Parameters
+        ----------
+        callback : callable
+            Function called with (frame, frame_number) for each captured frame.
+            Return False from the callback to stop early.
+        max_frames : int or None
+            Maximum number of frames to capture. None means run until
+            Ctrl+C or the callback returns False.
+        """
+        frame_number = 0
+        print("Starting continuous capture. Press Ctrl+C to stop.")
+
+        try:
+            while True:
+                if max_frames is not None and frame_number >= max_frames:
+                    print(f"Reached {max_frames} frames, stopping.")
+                    break
+
+                frame = self.capture()
+                if frame is None:
+                    print("Warning: failed to capture frame, skipping.")
+                    continue
+
+                self._update_fps()
+
+                result = callback(frame, frame_number)
+                frame_number += 1
+
+                # Allow the callback to signal a stop by returning False
+                if result is False:
+                    print("Callback requested stop.")
+                    break
+
+        except KeyboardInterrupt:
+            print(f"\nCapture stopped by user after {frame_number} frames "
+                  f"(avg {self.current_fps:.1f} FPS).")
+
     def release(self):
         if self.cap:
             self.cap.release()
