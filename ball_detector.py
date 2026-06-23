@@ -12,15 +12,14 @@ from ball_detector_calibration import calculateProjectionMatrix
 
 def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
     """
-    TODO: Case where no ball is detected
-    TODO: Offset is still from TL corner, should be center
+    Calculates the position of at most one orange ball on the playing field.
 
     Parameters
     ----------
     rawframe_bgr : numpy.ndarray
         The image from which the ball position is to be determined.
         NOTE: Operating under the assumption that there is only one ball (orange object).
-    calibration : TYPE
+    calibration : bool or numpy.ndarray
         Calibration refers to the (re-) calculation of the projection matrix used to level the playing field image.
         Set to true to (re-) calculate; set to false to use a previously calculated one (if it exists); or set to matrix to be used instead.
     fieldSize_mm : tuple(int, int), optional
@@ -36,11 +35,11 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
     https://docs.opencv.org/4.13.0/da/d6e/tutorial_py_geometric_transformations.html
     https://learnopencv.com/find-center-of-blob-centroid-using-opencv-cpp-python/
     """
-    if type(calibration)==bool:
+    if type(calibration) == bool:
         global cameraCalibrationMatrix
         if calibration:
             cameraCalibrationMatrix = calculateProjectionMatrix(rawframe_bgr, fieldSize_mm)
-    elif type(calibration)==np.ndarray:
+    elif type(calibration) == np.ndarray:
         cameraCalibrationMatrix = calibration
     
     # Display raw frame and the selection mask from the raw frame:
