@@ -112,12 +112,16 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
     trw = (306, 64)
     brw = (304, 198)
     
+    #rawSelectionMask2 = cv2.inRange(cv2.cvtColor(rawframe_bgr,cv2.COLOR_BGR2HSV),np.array([35,0,57]),np.array([120,115,120]))
+    #cv2.imshow("raw frame 2", rawSelectionMask2)
+    
     # Convert frame to grayscale:
     imgray = cv2.cvtColor(rawframe_bgr, cv2.COLOR_BGR2GRAY)
     _, imgray = cv2.threshold(imgray, 110, 255, cv2.THRESH_BINARY_INV)
     #kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3)) #No benefit from morphological closing (tested)
     #imgray = cv2.dilate(imgray, kernel)
     #imgray = cv2.erode(imgray, kernel)
+    #cv2.imshow("imgray", imgray)
     
     # Get TLF corner:
     #cropped = imgray[tlw[1]:, tlw[0]:]

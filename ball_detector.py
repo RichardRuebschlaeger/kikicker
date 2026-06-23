@@ -39,9 +39,9 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
     if type(calibration)==bool:
         global cameraCalibrationMatrix
         if calibration:
-            cameraCalibrationMatrix = calculateProjectionMatrix(rawframe_bgr, fieldSize_mm)#TODO: MAybe wrong size? 
-    #elif type()==:#TODO
-    #    cameraCalibrationMatrix = calibration
+            cameraCalibrationMatrix = calculateProjectionMatrix(rawframe_bgr, fieldSize_mm)
+    elif type(calibration)==np.ndarray:
+        cameraCalibrationMatrix = calibration
     
     # Display raw frame and the selection mask from the raw frame:
     rawSelectionMask = cv2.inRange(cv2.cvtColor(rawframe_bgr,cv2.COLOR_BGR2HSV),np.array([10,120,129]),np.array([40,255,255]))
