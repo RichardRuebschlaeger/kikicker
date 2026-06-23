@@ -12,7 +12,8 @@ from ball_detector_calibration import calculateProjectionMatrix
 
 def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
     """
-    Calculates the position of at most one orange ball on the playing field.
+    Calculates the position of at most one orange ball on the playing field. The position aligned to the center of the playing field.
+    White/left is negative x and black/right is positive x. Top half is negative y and bottom half is positive y.
 
     Parameters
     ----------
@@ -56,12 +57,12 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
     cv2.imshow("projected frame selection", projectedSelectionMask)
     M = cv2.moments(projectedSelectionMask)
     Mm00 = M["m00"]
-    if Mm00 == 0:
+    if Mm00 == 0.0:
         # No orange pixels found -> ball not detected
         ballpos = None
     else:
-        x = int(M["m10"] / Mm00)
-        y = int(M["m01"] / Mm00)
+        x = int((M["m10"] / Mm00) - (fieldSize_mm[0] / 2.0))
+        y = int((M["m01"] / Mm00) - (fieldSize_mm[1] / 2.0))
         ballpos = (x, y)
  
     # Send ball position via output function (None if not detected):
