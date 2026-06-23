@@ -166,7 +166,7 @@ def output_position(ballpos_mm, fieldSize_mm) -> None:
 
     Parameters
     ----------
-    ballpos_mm : tuple(int, int) | None
+    ballpos_mm : tuple(int, int) or None
         Current ball position in millimetres from the top-left corner of
         the playing field, or None when the ball is not detected.
     fieldSize_mm : tuple(int, int)

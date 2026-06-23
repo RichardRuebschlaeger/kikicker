@@ -52,19 +52,22 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
     projectedFrame_bgr = cv2.warpPerspective(rawframe_bgr, cameraCalibrationMatrix, fieldSize_mm);
     cv2.imshow("projected frame", projectedFrame_bgr)
     
-   # Get ball position from projected image:
+    # Get ball position from projected image:
     projectedSelectionMask = cv2.inRange(cv2.cvtColor(projectedFrame_bgr,cv2.COLOR_BGR2HSV),np.array([10,120,129]),np.array([40,255,255]))
     cv2.imshow("projected frame selection", projectedSelectionMask)
     M = cv2.moments(projectedSelectionMask)
-    if M["m00"] == 0:
-        # No orange pixels found → ball not detected
+    Mm00 = M["m00"]
+    if Mm00 == 0:
+        # No orange pixels found -> ball not detected
         ballpos = None
     else:
-        x = int(M["m10"] / M["m00"])
-        y = int(M["m01"] / M["m00"])
+        x = int(M["m10"] / Mm00)
+        y = int(M["m01"] / Mm00)
         ballpos = (x, y)
  
     # Send ball position via output function (None if not detected):
     output_position(ballpos, fieldSize_mm)
+    
+    # TODO: What are these for?
     cv2.waitKey(0)
     cv2.destroyAllWindows()
