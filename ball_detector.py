@@ -44,9 +44,9 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
         cameraCalibrationMatrix = calibration
     
     # Display raw frame and the selection mask from the raw frame:
-    rawSelectionMask = cv2.inRange(cv2.cvtColor(rawframe_bgr,cv2.COLOR_BGR2HSV),np.array([10,120,129]),np.array([40,255,255]))
+    #rawSelectionMask = cv2.inRange(cv2.cvtColor(rawframe_bgr,cv2.COLOR_BGR2HSV),np.array([10,120,129]),np.array([40,255,255]))
     cv2.imshow("raw frame", rawframe_bgr)
-    cv2.imshow("raw frame selection", rawSelectionMask)
+    #cv2.imshow("raw frame selection", rawSelectionMask)
     
     # Project and resize image:
     projectedFrame_bgr = cv2.warpPerspective(rawframe_bgr, cameraCalibrationMatrix, fieldSize_mm);
@@ -54,7 +54,7 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
     
     # Get ball position from projected image:
     projectedSelectionMask = cv2.inRange(cv2.cvtColor(projectedFrame_bgr,cv2.COLOR_BGR2HSV),np.array([10,120,129]),np.array([40,255,255]))
-    cv2.imshow("projected frame selection", projectedSelectionMask)
+    #cv2.imshow("projected frame selection", projectedSelectionMask)
     M = cv2.moments(projectedSelectionMask)
     Mm00 = M["m00"]
     if Mm00 == 0.0:
@@ -68,6 +68,6 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
     # Send ball position via output function (None if not detected):
     output_position(ballpos, fieldSize_mm)
     
-    # TODO: What are these for?
+    # TODO: What are these for? Move somewhere else and fix not exiting!
     cv2.waitKey(0)
     cv2.destroyAllWindows()

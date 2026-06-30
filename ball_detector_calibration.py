@@ -84,6 +84,11 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
                     aw = (sh0-i) + (sh1-j)
                     if aw < kur[2]:
                         kur = (i, j, aw)
+    Variable names:
+        Variables holding points follow this simple scheme: XXYY, where
+            -XX is TL (top left), BL (bottom left), TR (top right) and BR (bottom right)
+            -YY is FC (field corner), WC (wall corner) and SB (support beam)
+            
     Getting HSV-Values:
         https://phayuth.github.io/tools/image_hsv_segmenter.html
     
@@ -98,109 +103,167 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
         xx,yy are in image coordinates, x,y are offsets from corner
     """
     
-    """Calculate the corners of the playing field walls:"""
-    #TODO
-    
     
     rawframe_hsv = cv2.cvtColor(rawframe_bgr, cv2.COLOR_BGR2HSV)
     
+    """ Calculate the edges of the support beams """
+    imgray = cv2.cvtColor(rawframe_bgr, cv2.COLOR_BGR2GRAY)
+    _, imgray = cv2.threshold(imgray, 110, 255, cv2.THRESH_BINARY)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)) #No benefit from morphological closing (tested)
+    imgray = cv2.erode(imgray, kernel)
+    imgray = cv2.dilate(imgray, kernel)
+    cv2.imshow("imgray", imgray)
     
-    """Calculate the corners of the playing field:"""
+    # Detecting field corners by testing for minimum weighted Manhattan distance within a detectDistanceX x detectDistanceY px area from the frame corners towards the center
+    detectDistanceX = 55
+    detectDistanceY = 55
+    
+    #TLSB:
+    shortestEuclidianDistance = 50000;
+    for x in range(detectDistanceX):
+        xx = x
+        for y in range(detectDistanceY):
+            yy = y
+            currentMD = x + (1.5 * y)                                          # Biasing against y-direction, because the point should not be more towards y than field corner
+            yy = y
+            #rawframe_bgr[yy, xx] = [255,0,0]
+            if imgray[yy, xx] and currentMD < shortestEuclidianDistance:
+                tlsb = (xx, yy)
+                shortestEuclidianDistance = currentMD
+                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
+                
+    # TODO BLSB:
+    # TODO TRSB:
+    # TODO BRSB:
+    
+    
+    """ Calculate the corners of the playing field walls: """
+    # Jump to the center by 10 px on the x-axis only, so that we are past the support beams:
+    tlsb = (tlsb[0] + 15, tlsb[1])
+    #blsb = (blsb[0] + 15, blsb[1])
+    #trsb = (trsb[0] - 15, trsb[1])
+    #brsb = (brsb[0] - 15, brsb[1])
+    
     # Detecting field corners by testing for minimum Manhattan distance within a detectDistanceX x detectDistanceY px area from the field wall corners towards the center
     detectDistanceX = 20
     detectDistanceY = 20
     
-    # Use these as placeholders during development:
-    tlw = (75, 52)
-    blw = (67, 184)
-    trw = (306, 64)
-    brw = (305, 198)
+    # TLWC:
+    shortestEuclidianDistance = 50000;
+    for x in range(detectDistanceX):
+        xx = x + tlsb[0]
+        for y in range(detectDistanceY):
+            yy = y + tlsb[1]
+            currentMD = x + y
+            #rawframe_bgr[yy, xx] = [255,0,0]
+            if imgray[yy, xx] and currentMD < shortestEuclidianDistance:
+                tlwc = (xx, yy)
+                shortestEuclidianDistance = currentMD
+                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
+    
+    # TODO BLWC:
+    # TODO TRWC:
+    # TODO BRWC:
+    
+    # TODO jump towards center, because otherwise the surrounding area may be detected as a part of the field
+    
+    
+    """ Calculate the corners of the playing field: """
+    # Detecting field corners by testing for minimum Manhattan distance within a detectDistanceX x detectDistanceY px area from the field wall corners towards the center
+    detectDistanceX = 20
+    detectDistanceY = 20
+    
+    # Use these as placeholders for the wall corners during development:
+    tlwc = (75, 52)
+    blwc = (67, 184)
+    trwc = (306, 64)
+    brwc = (305, 198)
     
     # Selection based on color:
-    imgray = cv2.inRange(rawframe_hsv, np.array([35,0,57]), np.array([120,115,147]))
+    imselect = cv2.inRange(rawframe_hsv, np.array([35,0,57]), np.array([120,115,147]))
     #kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)) #No benefit from morphological closing (tested)
-    #imgray = cv2.erode(imgray, kernel)
-    #imgray = cv2.dilate(imgray, kernel)
-    cv2.imshow("imgray", imgray)
+    #imselect = cv2.erode(imselect, kernel)
+    #imselect = cv2.dilate(imselect, kernel)
+    cv2.imshow("imselect", imselect)
     
     # Selection based on brightness:
     """ KNOWN GOOD CODE, use instead of above section
-    imgray = cv2.cvtColor(rawframe_bgr, cv2.COLOR_BGR2GRAY)
-    _, imgray = cv2.threshold(imgray, 110, 255, cv2.THRESH_BINARY_INV)
+    imselect = cv2.cvtColor(rawframe_bgr, cv2.COLOR_BGR2GRAY)
+    _, imselect = cv2.threshold(imselect, 110, 255, cv2.THRESH_BINARY_INV)
     #kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3)) #No benefit from morphological closing (tested)
-    #imgray = cv2.dilate(imgray, kernel)
-    #imgray = cv2.erode(imgray, kernel)
-    #cv2.imshow("imgray", imgray)"""
+    #imselect = cv2.dilate(imselect, kernel)
+    #imselect = cv2.erode(imselect, kernel)
+    #cv2.imshow("imselect", imselect)"""
     
-    # Get TLF corner:
-    #cropped = imgray[tlw[1]:, tlw[0]:]
+    # TLFC:
+    #cropped = imselect[tlw[1]:, tlw[0]:]
     shortestManhattanDistance = 50000
     for x in range(detectDistanceX):
-        xx = x + tlw[0]
+        xx = x + tlwc[0]
         for y in range(detectDistanceY):
             currentMD = x + y
-            yy = y + tlw[1]
+            yy = y + tlwc[1]
             #rawframe_bgr[yy, xx] = [255,0,0]
-            if imgray[yy, xx] and currentMD < shortestManhattanDistance:
-                tlf = (xx, yy)
+            if imselect[yy, xx] and currentMD < shortestManhattanDistance:
+                tlfc = (xx, yy)
                 shortestManhattanDistance = currentMD
                 #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
     
-    # Get BLF corner:
-    #cropped = imgray[:blw[1], blw[0]:]
+    # BLFC:
+    #cropped = imselect[:blw[1], blw[0]:]
     shortestManhattanDistance = 50000
     for x in range(detectDistanceX):
-        xx = x + blw[0]
+        xx = x + blwc[0]
         for y in range(-detectDistanceY+1, 1):
             currentMD = x - y
-            yy = y + blw[1]
+            yy = y + blwc[1]
             #rawframe_bgr[yy, xx] = [0,255,0]
-            if imgray[yy, xx] and currentMD < shortestManhattanDistance:
-                blf = (xx, yy)
+            if imselect[yy, xx] and currentMD < shortestManhattanDistance:
+                blfc = (xx, yy)
                 shortestManhattanDistance = currentMD
                 #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
     
-    # Get TRF corner:
-    #cropped = imgray[trw[1]:, :trw[0]]
+    # TRFC:
+    #cropped = imselect[trw[1]:, :trw[0]]
     shortestManhattanDistance = 50000
     for x in range(-detectDistanceX+1, 1):
-        xx = x + trw[0]
+        xx = x + trwc[0]
         for y in range(detectDistanceY):
             currentMD = y - x
-            yy = y + trw[1]
+            yy = y + trwc[1]
             #rawframe_bgr[yy, xx] = [0,0,255]
-            if imgray[yy, xx] and currentMD < shortestManhattanDistance:
-                trf = (xx, yy)
+            if imselect[yy, xx] and currentMD < shortestManhattanDistance:
+                trfc = (xx, yy)
                 shortestManhattanDistance = currentMD
                 #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
     
-    # Get BRF corner:
-    #cropped = imgray[:brw[1], :brw[0]]
+    # BRFC:
+    #cropped = imselect[:brw[1], :brw[0]]
     shortestManhattanDistance = 50000
     for x in range(-detectDistanceX+1, 1):
-        xx = x + brw[0]
+        xx = x + brwc[0]
         for y in range(-detectDistanceY+1, 1):
             currentMD = -x - y
-            yy = y + brw[1]
+            yy = y + brwc[1]
             #rawframe_bgr[yy, xx] = [255,255,0]
-            if imgray[yy, xx] and currentMD < shortestManhattanDistance:
-                brf = (xx, yy)
+            if imselect[yy, xx] and currentMD < shortestManhattanDistance:
+                brfc = (xx, yy)
                 shortestManhattanDistance = currentMD
-                print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
+                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
     
     #cv2.imshow("cropped", cropped)
     #return np.eye(3)
 
 
-    """Calculating the projection matrix:"""
-    # Use these as placeholders during development:
-    #tlf = tlw
-    #blf = blw
-    #trf = trw
-    #brf = brw
+    """ Calculating the projection matrix: """
+    # Use these as placeholders for the field corners during development:
+    #tlfc = tlwc
+    #blfc = blwc
+    #trfc = trwc
+    #brfc = brwc
     
     # Generate field corner source list:
-    src = np.array([tlf, blf, trf, brf], np.float32)
+    src = np.array([tlfc, blfc, trfc, brfc], np.float32)
 
     # Generate corner destination list:
     dst = np.array([(0,               0),                                      #TLD (white)
