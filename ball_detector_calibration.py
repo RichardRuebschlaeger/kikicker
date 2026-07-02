@@ -109,7 +109,7 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
     """ Calculate the edges of the support beams """
     imgray = cv2.cvtColor(rawframe_bgr, cv2.COLOR_BGR2GRAY)
     _, imgray = cv2.threshold(imgray, 110, 255, cv2.THRESH_BINARY)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)) #No benefit from morphological closing (tested)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)) # Benefits from morphological opening (tested)
     imgray = cv2.erode(imgray, kernel)
     imgray = cv2.dilate(imgray, kernel)
     cv2.imshow("imgray", imgray)
