@@ -51,7 +51,7 @@ def calculateCornerFromTL(img_bin, startAt, detectDistance, bias=(1.0, 1.0)):
             if img_bin[yy, xx] and currentMD < shortestMD:
                 tlc = (xx, yy)
                 shortestMD = currentMD
-                print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
+                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
     return tlc
 
 
@@ -90,7 +90,7 @@ def calculateCornerFromBL(img_bin, startAt, detectDistance, bias=(1.0, 1.0)):
             if img_bin[yy, xx] and currentMD < shortestMD:
                 blc = (xx, yy)
                 shortestMD = currentMD
-                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
+                print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
     return blc
 
 
@@ -175,14 +175,14 @@ def calculateCornerFromBR(img_bin, startAt, detectDistance, bias=(1.0,1.0)):
 
 
 
-def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
+def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     """
     
 
     Parameters
     ----------
-    rawframe_bgr : numpy.ndarray
-        The image from which the ball position is to be determined.
+    rawframe_hsv : numpy.ndarray
+        The image in HSV from which the ball position is to be determined.
     fieldSize_mm : tuple(int, int), optional
         The size of the playing field measures in millimeters. The default is (1200, 680) or 120cm x 68cm.
         Used for calibration and to calculate the size of intermediate images.
@@ -267,10 +267,8 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
     """
     
     
-    rawframe_hsv = cv2.cvtColor(rawframe_bgr, cv2.COLOR_BGR2HSV)
-    
     """ Calculate the edges of the support beams: """
-    imgray = cv2.cvtColor(rawframe_bgr, cv2.COLOR_BGR2GRAY)
+    _, _, imgray = cv2.split(rawframe_hsv)                                     # V-channel effectively is grayscale image -> grayscale conversion should be cheap
     _, imgray = cv2.threshold(imgray, 110, 255, cv2.THRESH_BINARY)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))                  # Benefits from morphological opening (tested)
     imgray = cv2.erode(imgray, kernel)
@@ -282,6 +280,7 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
     print("support beam")
     tlsb = calculateCornerFromTL(imgray, (0,0), detectDistance, (1.0,1.5))
     # TODO BLSB:
+    #blsb = calculateCornerFromBL(imgray, (0, imgray.shape[0] -1), detectDistance, (1.0,1.5))
     # TODO TRSB:
     # TODO BRSB:
     
@@ -317,7 +316,7 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
     
     # Selection based on color:
     imselect = cv2.inRange(rawframe_hsv, np.array([35,0,57]), np.array([120,115,147]))
-    #kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)) #No benefit from morphological closing (tested)
+    #kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))                  # No benefit from morphological closing (tested)
     #imselect = cv2.erode(imselect, kernel)
     #imselect = cv2.dilate(imselect, kernel)
     cv2.imshow("imselect", imselect)
@@ -326,7 +325,7 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
     """ KNOWN GOOD CODE, use instead of above section
     imselect = cv2.cvtColor(rawframe_bgr, cv2.COLOR_BGR2GRAY)
     _, imselect = cv2.threshold(imselect, 110, 255, cv2.THRESH_BINARY_INV)
-    #kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3)) #No benefit from morphological closing (tested)
+    #kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))               #No benefit from morphological closing (tested)
     #imselect = cv2.dilate(imselect, kernel)
     #imselect = cv2.erode(imselect, kernel)
     #cv2.imshow("imselect", imselect)"""
