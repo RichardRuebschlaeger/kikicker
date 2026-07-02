@@ -4,8 +4,20 @@
 Created on Mon Jun  8 19:07:15 2026
 
 Discoveries:
--While working on the calibrator, I discovered that the silver colour of the rods holding the figures is nearly identical to the white colour of the playing field walls. This is very effective at throwing off greyscale-thresholding. I have yet to test HSV-based selections. -richard
--In the cameras default orientation, it appears as if you could select a "sub-image" purely by pixel coordinates that fully contains the playing field, but not the space beyond the arms holding the camera, and use that to search for the field edges. Although this does reduce resilience towards other camera angles, it can be used to simplify code. Unfortunately, I can't think of a solution that automatically detects this "sub-image". -richard
+    -While working on the calibrator, I discovered that the silver colour of the rods holding the figures is nearly identical to the white colour of the playing field walls. This is very effective at throwing off greyscale-thresholding. I have yet to test HSV-based selections. -richard
+    -In the cameras default orientation, it appears as if you could select a "sub-image" purely by pixel coordinates that fully contains the playing field, but not the space beyond the arms holding the camera, and use that to search for the field edges. Although this does reduce resilience towards other camera angles, it can be used to simplify code. Unfortunately, I can't think of a solution that automatically detects this "sub-image". -richard
+
+TODOs:
+    -There are - if I am not mistaken - 8 possible rotation cases for the kicker table, but this only handles one of them - see the resource pictures. In the future, better rotation handling might be a topic worth exploring.
+    -Bounds checking in helper methods
+
+Notes:
+    -Access images as yx, but points are xy
+    -xx,yy are in image coordinates, x,y are offsets from corner
+    Variable names:
+        Variables holding points follow this simple scheme: XXYY, where
+            -XX is TL (top left), BL (bottom left), TR (top right) and BR (bottom right)
+            -YY is FC (field corner), WC (wall corner) and SB (support beam) or simply C for corner
 
 @author: richard
 """
@@ -38,8 +50,6 @@ def calculateCornerFromTL(img_bin, startAt, detectDistance, bias=(1.0, 1.0)):
 
     Notes:
         There is no check, whether an accessed pixel is outside the image.
-        Access images as yx, but points are xy
-        xx,yy are in image coordinates, x,y are offsets from corner
     """
     shortestMD = float("inf")
     tlc = None
@@ -77,8 +87,6 @@ def calculateCornerFromBL(img_bin, startAt, detectDistance, bias=(1.0, 1.0)):
 
     Notes:
         There is no check, whether an accessed pixel is outside the image.
-        Access images as yx, but points are xy
-        xx,yy are in image coordinates, x,y are offsets from corner
     """
     shortestMD = float("inf")
     blc = None
@@ -90,7 +98,7 @@ def calculateCornerFromBL(img_bin, startAt, detectDistance, bias=(1.0, 1.0)):
             if img_bin[yy, xx] and currentMD < shortestMD:
                 blc = (xx, yy)
                 shortestMD = currentMD
-                print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
+                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
     return blc
 
 
@@ -116,8 +124,6 @@ def calculateCornerFromTR(img_bin, startAt, detectDistance, bias=(1.0,1.0)):
 
     Notes:
         There is no check, whether an accessed pixel is outside the image.
-        Access images as yx, but points are xy
-        xx,yy are in image coordinates, x,y are offsets from corner
     """
     shortestMD = float("inf")
     trc = None
@@ -126,7 +132,6 @@ def calculateCornerFromTR(img_bin, startAt, detectDistance, bias=(1.0,1.0)):
         for y in range(detectDistance[1]):
             currentMD = (bias[0] * -x) + (bias[1] * y)
             yy = y + startAt[1]
-            #rawframe_bgr[yy, xx] = [0,0,255]
             if img_bin[yy, xx] and currentMD < shortestMD:
                 trc = (xx, yy)
                 shortestMD = currentMD
@@ -156,8 +161,6 @@ def calculateCornerFromBR(img_bin, startAt, detectDistance, bias=(1.0,1.0)):
 
     Notes:
         There is no check, whether an accessed pixel is outside the image.
-        Access images as yx, but points are xy
-        xx,yy are in image coordinates, x,y are offsets from corner
     """
     shortestMD = float("inf")
     brc = None
@@ -169,7 +172,7 @@ def calculateCornerFromBR(img_bin, startAt, detectDistance, bias=(1.0,1.0)):
             if img_bin[yy, xx] and currentMD < shortestMD:
                 brc = (xx, yy)
                 shortestMD = currentMD
-                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
+                print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
     return brc
 
 
@@ -247,10 +250,6 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
                     aw = (sh0-i) + (sh1-j)
                     if aw < kur[2]:
                         kur = (i, j, aw)
-    Variable names:
-        Variables holding points follow this simple scheme: XXYY, where
-            -XX is TL (top left), BL (bottom left), TR (top right) and BR (bottom right)
-            -YY is FC (field corner), WC (wall corner) and SB (support beam)
             
     Getting HSV-Values:
         https://phayuth.github.io/tools/image_hsv_segmenter.html
@@ -260,37 +259,32 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     
     Projection Matrix:
         https://docs.opencv.org/4.13.0/da/d6e/tutorial_py_geometric_transformations.html
-    
-    NOTES TO SELF:
-        Access images as yx, but points are xy
-        xx,yy are in image coordinates, x,y are offsets from corner
     """
     
     
     """ Calculate the edges of the support beams: """
     _, _, imgray = cv2.split(rawframe_hsv)                                     # V-channel effectively is grayscale image -> grayscale conversion should be cheap
-    _, imgray = cv2.threshold(imgray, 110, 255, cv2.THRESH_BINARY)
+    _, imgray = cv2.threshold(imgray, 120, 255, cv2.THRESH_BINARY)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))                  # Benefits from morphological opening (tested)
     imgray = cv2.erode(imgray, kernel)
     imgray = cv2.dilate(imgray, kernel)
     cv2.imshow("imgray", imgray)
     
     # Detecting the support beams by testing for minimum Manhattan distance:
-    detectDistance = (55, 55)
-    print("support beam")
+    detectDistance = (60, 60)
+    print("support beam")                                                      # For better display on cmd
     tlsb = calculateCornerFromTL(imgray, (0,0), detectDistance, (1.0,1.5))
-    # TODO BLSB:
-    #blsb = calculateCornerFromBL(imgray, (0, imgray.shape[0] -1), detectDistance, (1.0,1.5))
-    # TODO TRSB:
-    # TODO BRSB:
+    blsb = calculateCornerFromBL(imgray, (0, imgray.shape[0] -1), detectDistance, (1.0,1.5)) # Actually top left of wall corner
+    trsb = calculateCornerFromTR(imgray, (imgray.shape[1] -7, 0), detectDistance) # Needs to start 6px left from the right corner, because otherwise it will detect the cable conduit underneath the window
+    brsb = calculateCornerFromBR(imgray, (imgray.shape[1] -1, imgray.shape[0] -1), detectDistance)
     
     
     """ Calculate the corners of the playing field walls: """
     # Jump to the center by 15 px on the x-axis only, so that we are past the support beams:
     tlsb = (tlsb[0] + 15, tlsb[1])
-    #blsb = (blsb[0] + 15, blsb[1])
-    #trsb = (trsb[0] - 15, trsb[1])
-    #brsb = (brsb[0] - 15, brsb[1])
+    blsb = (blsb[0] + 20, blsb[1])                                             # Actually top left of wall corner
+    trsb = (trsb[0] - 15, trsb[1])
+    brsb = (brsb[0] - 15, brsb[1])
     
     # Detecting wall corners by testing for minimum Manhattan distance:
     detectDistance = (20, 20)
