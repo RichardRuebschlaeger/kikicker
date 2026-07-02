@@ -277,8 +277,9 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
     imgray = cv2.dilate(imgray, kernel)
     cv2.imshow("imgray", imgray)
     
-    # Detecting field corners by testing for minimum weighted Manhattan distance within a detectDistanceX x detectDistanceY px area from the frame corners towards the center
+    # Detecting the support beams by testing for minimum Manhattan distance:
     detectDistance = (55, 55)
+    print("support beam")
     tlsb = calculateCornerFromTL(imgray, (0,0), detectDistance, (1.0,1.5))
     # TODO BLSB:
     # TODO TRSB:
@@ -292,19 +293,24 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
     #trsb = (trsb[0] - 15, trsb[1])
     #brsb = (brsb[0] - 15, brsb[1])
     
-    # Detecting field corners by testing for minimum Manhattan distance within a detectDistanceX x detectDistanceY px area from the field wall corners towards the center
+    # Detecting wall corners by testing for minimum Manhattan distance:
     detectDistance = (20, 20)
+    print("wall")
     tlwc = calculateCornerFromTL(imgray, tlsb, detectDistance)
     # TODO BLWC:
     # TODO TRWC:
     # TODO BRWC:
     
-    # TODO jump towards center, because otherwise the surrounding area may be detected as a part of the field
-    
     
     """ Calculate the corners of the playing field: """
+    # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
+    tlwc = (tlwc[0] + 5, tlwc[1] + 5)
+    #blwc = (blwc[0] + 5, blwc[1] - 5)
+    #trwc = (trwc[0] - 5, trwc[1] + 5)
+    #brwc = (brwc[0] - 5, brwc[1] - 5)
+    
     # Use these as placeholders for the wall corners during development:
-    tlwc = (75, 52)
+    #tlwc = (75, 52)
     blwc = (67, 184)
     trwc = (306, 64)
     brwc = (305, 198)
@@ -327,6 +333,7 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
     
     # Detecting field corners by testing for minimum Manhattan distance:
     detectDistance = (20, 20)
+    print("field")
     tlfc = calculateCornerFromTL(imselect, tlwc, detectDistance)
     blfc = calculateCornerFromBL(imselect, blwc, detectDistance)
     trfc = calculateCornerFromTR(imselect, trwc, detectDistance)
