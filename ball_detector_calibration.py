@@ -12,6 +12,169 @@ Discoveries:
 import cv2
 import numpy as np
 
+
+
+
+
+def calculateCornerFromTL(img_bin, startAt, detectDistance, bias=(1.0, 1.0)):
+    """
+    A helper-function that calculates out the nearest point (corner) of an object in a binary image starting from the top-left using Manhattan distance.
+
+    Parameters
+    ----------
+    img_bin : numpy.ndarray
+        The binary image to search in.
+    startAt : tuple(int, int)
+        The point at which to start searching at, represented as (x, y). Shall not be outside the image.
+    detectDistance : tuple(int, int)
+        The area from the starting point to search in, represented as (x, y). Results not guaranteed for values < 1.
+    bias : tuple(double, double), optional, represented as (wx, wy)
+        A weight that can be applied to the axes during the search. The default is (1.0, 1.0), which represents no bias at all. Results not guaranteed for values <= 0.
+
+    Returns
+    -------
+    tuple(int, int) or None
+        The coordinates of the corner or None if none was found.
+
+    Notes:
+        There is no check, whether an accessed pixel is outside the image.
+        Access images as yx, but points are xy
+        xx,yy are in image coordinates, x,y are offsets from corner
+    """
+    shortestMD = float("inf")
+    tlc = None
+    for x in range(detectDistance[0]):
+        xx = x + startAt[0]
+        for y in range(detectDistance[1]):
+            yy = y + startAt[1]
+            currentMD = (bias[0] * x) + (bias[1] * y)
+            if img_bin[yy, xx] and currentMD < shortestMD:
+                tlc = (xx, yy)
+                shortestMD = currentMD
+                print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
+    return tlc
+
+
+def calculateCornerFromBL(img_bin, startAt, detectDistance, bias=(1.0, 1.0)):
+    """
+    A helper-function that calculates out the nearest point (corner) of an object in a binary image starting from the bottom-left using Manhattan distance.
+
+    Parameters
+    ----------
+    img_bin : numpy.ndarray
+        The binary image to search in.
+    startAt : tuple(int, int)
+        The point at which to start searching at, represented as (x, y). Shall not be outside the image.
+    detectDistance : tuple(int, int)
+        The area from the starting point to search in, represented as (x, y). Results not guaranteed for values < 1.
+    bias : tuple(double, double), optional, represented as (wx, wy)
+        A weight that can be applied to the axes during the search. The default is (1.0, 1.0), which represents no bias at all. Results not guaranteed for values <= 0.
+
+    Returns
+    -------
+    tuple(int, int) or None
+        The coordinates of the corner or None if none was found.
+
+    Notes:
+        There is no check, whether an accessed pixel is outside the image.
+        Access images as yx, but points are xy
+        xx,yy are in image coordinates, x,y are offsets from corner
+    """
+    shortestMD = float("inf")
+    blc = None
+    for x in range(detectDistance[0]):
+        xx = x + startAt[0]
+        for y in range(-detectDistance[1] +1, 1):
+            currentMD = x - y
+            yy = y + startAt[1]
+            if img_bin[yy, xx] and currentMD < shortestMD:
+                blc = (xx, yy)
+                shortestMD = currentMD
+                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
+    return blc
+
+
+def calculateCornerFromTR(img_bin, startAt, detectDistance, bias=(1.0,1.0)):
+    """
+    A helper-function that calculates out the nearest point (corner) of an object in a binary image starting from the top-right using Manhattan distance.
+
+    Parameters
+    ----------
+    img_bin : numpy.ndarray
+        The binary image to search in.
+    startAt : tuple(int, int)
+        The point at which to start searching at, represented as (x, y). Shall not be outside the image.
+    detectDistance : tuple(int, int)
+        The area from the starting point to search in, represented as (x, y). Results not guaranteed for values < 1.
+    bias : tuple(double, double), optional, represented as (wx, wy)
+        A weight that can be applied to the axes during the search. The default is (1.0, 1.0), which represents no bias at all. Results not guaranteed for values <= 0.
+
+    Returns
+    -------
+    tuple(int, int) or None
+        The coordinates of the corner or None if none was found.
+
+    Notes:
+        There is no check, whether an accessed pixel is outside the image.
+        Access images as yx, but points are xy
+        xx,yy are in image coordinates, x,y are offsets from corner
+    """
+    shortestMD = float("inf")
+    trc = None
+    for x in range(-detectDistance[0] +1, 1):
+        xx = x + startAt[0]
+        for y in range(detectDistance[1]):
+            currentMD = (bias[0] * -x) + (bias[1] * y)
+            yy = y + startAt[1]
+            #rawframe_bgr[yy, xx] = [0,0,255]
+            if img_bin[yy, xx] and currentMD < shortestMD:
+                trc = (xx, yy)
+                shortestMD = currentMD
+                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
+    return trc
+
+
+def calculateCornerFromBR(img_bin, startAt, detectDistance, bias=(1.0,1.0)):
+    """
+    A helper-function that calculates out the nearest point (corner) of an object in a binary image starting from the bottom-right using Manhattan distance.
+
+    Parameters
+    ----------
+    img_bin : numpy.ndarray
+        The binary image to search in.
+    startAt : tuple(int, int)
+        The point at which to start searching at, represented as (x, y). Shall not be outside the image.
+    detectDistance : tuple(int, int)
+        The area from the starting point to search in, represented as (x, y). Results not guaranteed for values < 1.
+    bias : tuple(double, double), optional, represented as (wx, wy)
+        A weight that can be applied to the axes during the search. The default is (1.0, 1.0), which represents no bias at all. Results not guaranteed for values <= 0.
+
+    Returns
+    -------
+    tuple(int, int) or None
+        The coordinates of the corner or None if none was found.
+
+    Notes:
+        There is no check, whether an accessed pixel is outside the image.
+        Access images as yx, but points are xy
+        xx,yy are in image coordinates, x,y are offsets from corner
+    """
+    shortestMD = float("inf")
+    brc = None
+    for x in range(-detectDistance[0] +1, 1):
+        xx = x + startAt[0]
+        for y in range(-detectDistance[1] +1, 1):
+            currentMD = -(bias[0] * x) - (bias[1] * y)
+            yy = y + startAt[1]
+            if img_bin[yy, xx] and currentMD < shortestMD:
+                brc = (xx, yy)
+                shortestMD = currentMD
+                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
+    return brc
+
+
+
+
 def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
     """
     
@@ -106,61 +269,32 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
     
     rawframe_hsv = cv2.cvtColor(rawframe_bgr, cv2.COLOR_BGR2HSV)
     
-    """ Calculate the edges of the support beams """
+    """ Calculate the edges of the support beams: """
     imgray = cv2.cvtColor(rawframe_bgr, cv2.COLOR_BGR2GRAY)
     _, imgray = cv2.threshold(imgray, 110, 255, cv2.THRESH_BINARY)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)) # Benefits from morphological opening (tested)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))                  # Benefits from morphological opening (tested)
     imgray = cv2.erode(imgray, kernel)
     imgray = cv2.dilate(imgray, kernel)
     cv2.imshow("imgray", imgray)
     
     # Detecting field corners by testing for minimum weighted Manhattan distance within a detectDistanceX x detectDistanceY px area from the frame corners towards the center
-    detectDistanceX = 55
-    detectDistanceY = 55
-    
-    #TLSB:
-    shortestEuclidianDistance = 50000;
-    for x in range(detectDistanceX):
-        xx = x
-        for y in range(detectDistanceY):
-            yy = y
-            currentMD = x + (1.5 * y)                                          # Biasing against y-direction, because the point should not be more towards y than field corner
-            yy = y
-            #rawframe_bgr[yy, xx] = [255,0,0]
-            if imgray[yy, xx] and currentMD < shortestEuclidianDistance:
-                tlsb = (xx, yy)
-                shortestEuclidianDistance = currentMD
-                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
-                
+    detectDistance = (55, 55)
+    tlsb = calculateCornerFromTL(imgray, (0,0), detectDistance, (1.0,1.5))
     # TODO BLSB:
     # TODO TRSB:
     # TODO BRSB:
     
     
     """ Calculate the corners of the playing field walls: """
-    # Jump to the center by 10 px on the x-axis only, so that we are past the support beams:
+    # Jump to the center by 15 px on the x-axis only, so that we are past the support beams:
     tlsb = (tlsb[0] + 15, tlsb[1])
     #blsb = (blsb[0] + 15, blsb[1])
     #trsb = (trsb[0] - 15, trsb[1])
     #brsb = (brsb[0] - 15, brsb[1])
     
     # Detecting field corners by testing for minimum Manhattan distance within a detectDistanceX x detectDistanceY px area from the field wall corners towards the center
-    detectDistanceX = 20
-    detectDistanceY = 20
-    
-    # TLWC:
-    shortestEuclidianDistance = 50000;
-    for x in range(detectDistanceX):
-        xx = x + tlsb[0]
-        for y in range(detectDistanceY):
-            yy = y + tlsb[1]
-            currentMD = x + y
-            #rawframe_bgr[yy, xx] = [255,0,0]
-            if imgray[yy, xx] and currentMD < shortestEuclidianDistance:
-                tlwc = (xx, yy)
-                shortestEuclidianDistance = currentMD
-                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
-    
+    detectDistance = (20, 20)
+    tlwc = calculateCornerFromTL(imgray, tlsb, detectDistance)
     # TODO BLWC:
     # TODO TRWC:
     # TODO BRWC:
@@ -169,10 +303,6 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
     
     
     """ Calculate the corners of the playing field: """
-    # Detecting field corners by testing for minimum Manhattan distance within a detectDistanceX x detectDistanceY px area from the field wall corners towards the center
-    detectDistanceX = 20
-    detectDistanceY = 20
-    
     # Use these as placeholders for the wall corners during development:
     tlwc = (75, 52)
     blwc = (67, 184)
@@ -195,64 +325,12 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
     #imselect = cv2.erode(imselect, kernel)
     #cv2.imshow("imselect", imselect)"""
     
-    # TLFC:
-    #cropped = imselect[tlw[1]:, tlw[0]:]
-    shortestManhattanDistance = 50000
-    for x in range(detectDistanceX):
-        xx = x + tlwc[0]
-        for y in range(detectDistanceY):
-            currentMD = x + y
-            yy = y + tlwc[1]
-            #rawframe_bgr[yy, xx] = [255,0,0]
-            if imselect[yy, xx] and currentMD < shortestManhattanDistance:
-                tlfc = (xx, yy)
-                shortestManhattanDistance = currentMD
-                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
-    
-    # BLFC:
-    #cropped = imselect[:blw[1], blw[0]:]
-    shortestManhattanDistance = 50000
-    for x in range(detectDistanceX):
-        xx = x + blwc[0]
-        for y in range(-detectDistanceY+1, 1):
-            currentMD = x - y
-            yy = y + blwc[1]
-            #rawframe_bgr[yy, xx] = [0,255,0]
-            if imselect[yy, xx] and currentMD < shortestManhattanDistance:
-                blfc = (xx, yy)
-                shortestManhattanDistance = currentMD
-                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
-    
-    # TRFC:
-    #cropped = imselect[trw[1]:, :trw[0]]
-    shortestManhattanDistance = 50000
-    for x in range(-detectDistanceX+1, 1):
-        xx = x + trwc[0]
-        for y in range(detectDistanceY):
-            currentMD = y - x
-            yy = y + trwc[1]
-            #rawframe_bgr[yy, xx] = [0,0,255]
-            if imselect[yy, xx] and currentMD < shortestManhattanDistance:
-                trfc = (xx, yy)
-                shortestManhattanDistance = currentMD
-                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
-    
-    # BRFC:
-    #cropped = imselect[:brw[1], :brw[0]]
-    shortestManhattanDistance = 50000
-    for x in range(-detectDistanceX+1, 1):
-        xx = x + brwc[0]
-        for y in range(-detectDistanceY+1, 1):
-            currentMD = -x - y
-            yy = y + brwc[1]
-            #rawframe_bgr[yy, xx] = [255,255,0]
-            if imselect[yy, xx] and currentMD < shortestManhattanDistance:
-                brfc = (xx, yy)
-                shortestManhattanDistance = currentMD
-                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
-    
-    #cv2.imshow("cropped", cropped)
-    #return np.eye(3)
+    # Detecting field corners by testing for minimum Manhattan distance:
+    detectDistance = (20, 20)
+    tlfc = calculateCornerFromTL(imselect, tlwc, detectDistance)
+    blfc = calculateCornerFromBL(imselect, blwc, detectDistance)
+    trfc = calculateCornerFromTR(imselect, trwc, detectDistance)
+    brfc = calculateCornerFromBR(imselect, brwc, detectDistance)
 
 
     """ Calculating the projection matrix: """
@@ -262,7 +340,7 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
     #trfc = trwc
     #brfc = brwc
     
-    # Generate field corner source list:
+    # Generate field corner source list (assuming the corners are found):
     src = np.array([tlfc, blfc, trfc, brfc], np.float32)
 
     # Generate corner destination list:
@@ -272,5 +350,6 @@ def calculateProjectionMatrix(rawframe_bgr, fieldSize_mm=(1200, 680)):
                     (fieldSize_mm[0], fieldSize_mm[1])],np.float32)            #BRD (black)
                 
     # Calculate perspective transformation matrix:
+    #P = np.eye(3)
     P = cv2.getPerspectiveTransform(src, dst)
     return P
