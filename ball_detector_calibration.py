@@ -8,7 +8,7 @@ Discoveries:
     -In the cameras default orientation, it appears as if you could select a "sub-image" purely by pixel coordinates that fully contains the playing field, but not the space beyond the arms holding the camera, and use that to search for the field edges. Although this does reduce resilience towards other camera angles, it can be used to simplify code. Unfortunately, I can't think of a solution that automatically detects this "sub-image". -richard
 
 TODOs:
-    -There are - if I am not mistaken - 8 possible rotation cases for the kicker table, but this only handles one of them - see the resource pictures. In the future, better rotation handling might be a topic worth exploring.
+    -There are - if I am not mistaken - 8 possible rotation cases for the kicker table, but this only handles one of them; see the resource pictures. In the future, better rotation handling might be a topic worth exploring.
     -Bounds checking in helper methods
 
 Notes:
@@ -98,7 +98,7 @@ def calculateCornerFromBL(img_bin, startAt, detectDistance, bias=(1.0, 1.0)):
             if img_bin[yy, xx] and currentMD < shortestMD:
                 blc = (xx, yy)
                 shortestMD = currentMD
-                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
+                print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
     return blc
 
 
@@ -172,7 +172,7 @@ def calculateCornerFromBR(img_bin, startAt, detectDistance, bias=(1.0,1.0)):
             if img_bin[yy, xx] and currentMD < shortestMD:
                 brc = (xx, yy)
                 shortestMD = currentMD
-                print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
+                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
     return brc
 
 
@@ -180,7 +180,7 @@ def calculateCornerFromBR(img_bin, startAt, detectDistance, bias=(1.0,1.0)):
 
 def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     """
-    
+    Calculates the projection matrix required to project the passed image, so that the field corners are the new image corners.
 
     Parameters
     ----------
@@ -192,7 +192,8 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
 
     Returns
     -------
-    None.
+    numpy.ndarray
+        The projective transformation matrix.
     
     Important Links
     ---------------
@@ -271,8 +272,8 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     cv2.imshow("imgray", imgray)
     
     # Detecting the support beams by testing for minimum Manhattan distance:
+    #print("support beam")                                                      # For better display on cmd
     detectDistance = (60, 60)
-    print("support beam")                                                      # For better display on cmd
     tlsb = calculateCornerFromTL(imgray, (0,0), detectDistance, (1.0,1.5))
     blsb = calculateCornerFromBL(imgray, (0, imgray.shape[0] -1), detectDistance, (1.0,1.5)) # Actually top left of wall corner
     trsb = calculateCornerFromTR(imgray, (imgray.shape[1] -7, 0), detectDistance) # Needs to start 6px left from the right corner, because otherwise it will detect the cable conduit underneath the window
@@ -287,10 +288,10 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     brsb = (brsb[0] - 15, brsb[1])
     
     # Detecting wall corners by testing for minimum Manhattan distance:
-    detectDistance = (20, 20)
-    print("wall")                                                              # For better display on cmd
+    #print("wall")                                                              # For better display on cmd
+    detectDistance = (25, 25)
     tlwc = calculateCornerFromTL(imgray, tlsb, detectDistance)
-    #blwc = calculateCornerFromTL(imgray, blsb, detectDistance)                  # TODO large difference to dev-value -> Investigate
+    blwc = calculateCornerFromTL(imgray, blsb, detectDistance)
     trwc = calculateCornerFromTR(imgray, trsb, detectDistance)
     brwc = calculateCornerFromBR(imgray, brsb, detectDistance)
     
@@ -298,35 +299,29 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     """ Calculate the corners of the playing field: """
     # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
     tlwc = (tlwc[0] + 5, tlwc[1] + 5)
-    #blwc = (blwc[0] + 5, blwc[1] - 5)
+    blwc = (blwc[0] + 5, blwc[1])
     trwc = (trwc[0] - 5, trwc[1] + 5)
     brwc = (brwc[0] - 5, brwc[1] - 5)
     
     # Use these as placeholders for the wall corners during development:
     #tlwc = (75, 52)
-    blwc = (67, 184)
+    #blwc = (67, 184)
     #trwc = (306, 64)
     #brwc = (305, 198)
     
-    # Selection based on color:
+    # Selection based on color:                                                # No benefit from morphological closing (tested)
     imselect = cv2.inRange(rawframe_hsv, np.array([35,0,57]), np.array([120,115,147]))
-    #kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))                  # No benefit from morphological closing (tested)
-    #imselect = cv2.erode(imselect, kernel)
-    #imselect = cv2.dilate(imselect, kernel)
     cv2.imshow("imselect", imselect)
     
     # Selection based on brightness:
-    """ KNOWN GOOD CODE, use instead of above section
+    """ KNOWN GOOD CODE, may be used instead of section above
     imselect = cv2.cvtColor(rawframe_bgr, cv2.COLOR_BGR2GRAY)
-    _, imselect = cv2.threshold(imselect, 110, 255, cv2.THRESH_BINARY_INV)
-    #kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))               #No benefit from morphological closing (tested)
-    #imselect = cv2.dilate(imselect, kernel)
-    #imselect = cv2.erode(imselect, kernel)
+    _, imselect = cv2.threshold(imselect, 110, 255, cv2.THRESH_BINARY_INV)      #No benefit from morphological closing (tested)
     #cv2.imshow("imselect", imselect)"""
     
     # Detecting field corners by testing for minimum Manhattan distance:
+    #print("field")                                                             # For better display on cmd
     detectDistance = (20, 20)
-    print("field")                                                             # For better display on cmd
     tlfc = calculateCornerFromTL(imselect, tlwc, detectDistance)
     blfc = calculateCornerFromBL(imselect, blwc, detectDistance)
     trfc = calculateCornerFromTR(imselect, trwc, detectDistance)
