@@ -17,7 +17,7 @@ Notes:
     Variable names:
         Variables holding points follow this simple scheme: XXYY, where
             -XX is TL (top left), BL (bottom left), TR (top right) and BR (bottom right)
-            -YY is FC (field corner), WC (wall corner) and SB (support beam) or simply C for corner
+            -YY is FC (field corner), WC (wall corner) and SB (support beam) or simply C for corner and D for destination.
 
 @author: richard
 """
@@ -288,25 +288,25 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     
     # Detecting wall corners by testing for minimum Manhattan distance:
     detectDistance = (20, 20)
-    print("wall")
+    print("wall")                                                              # For better display on cmd
     tlwc = calculateCornerFromTL(imgray, tlsb, detectDistance)
-    # TODO BLWC:
-    # TODO TRWC:
-    # TODO BRWC:
+    #blwc = calculateCornerFromTL(imgray, blsb, detectDistance)                  # TODO large difference to dev-value -> Investigate
+    trwc = calculateCornerFromTR(imgray, trsb, detectDistance)
+    brwc = calculateCornerFromBR(imgray, brsb, detectDistance)
     
     
     """ Calculate the corners of the playing field: """
     # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
     tlwc = (tlwc[0] + 5, tlwc[1] + 5)
     #blwc = (blwc[0] + 5, blwc[1] - 5)
-    #trwc = (trwc[0] - 5, trwc[1] + 5)
-    #brwc = (brwc[0] - 5, brwc[1] - 5)
+    trwc = (trwc[0] - 5, trwc[1] + 5)
+    brwc = (brwc[0] - 5, brwc[1] - 5)
     
     # Use these as placeholders for the wall corners during development:
     #tlwc = (75, 52)
     blwc = (67, 184)
-    trwc = (306, 64)
-    brwc = (305, 198)
+    #trwc = (306, 64)
+    #brwc = (305, 198)
     
     # Selection based on color:
     imselect = cv2.inRange(rawframe_hsv, np.array([35,0,57]), np.array([120,115,147]))
@@ -326,7 +326,7 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     
     # Detecting field corners by testing for minimum Manhattan distance:
     detectDistance = (20, 20)
-    print("field")
+    print("field")                                                             # For better display on cmd
     tlfc = calculateCornerFromTL(imselect, tlwc, detectDistance)
     blfc = calculateCornerFromBL(imselect, blwc, detectDistance)
     trfc = calculateCornerFromTR(imselect, trwc, detectDistance)
