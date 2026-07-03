@@ -53,10 +53,11 @@ def main():
     
     try:
         if choice == '1':
-            print("\nCapturing single frame. Press Ctrl+C or q to stop")
+            print("\nCapturing single frame. Press any key to stop")
             rawframe_hsv = camera.capture()
             detect_ball(rawframe_hsv, True)
             # TODO pause here
+            cv2.waitKey(0)
             
         elif choice == '2':
             print("\nCapturing continous frames. Press Ctrl+C to stop.")
