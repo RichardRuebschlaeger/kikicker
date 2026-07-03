@@ -10,16 +10,16 @@ import numpy as np
 from output import output_position
 from ball_detector_calibration import calculateProjectionMatrix
 
-def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
+def detect_ball(rawframe_hsv, calibration, fieldSize_mm=(1200,680)):
     """
     Calculates the position of at most one orange ball on the playing field. The position relative to the center of the playing field.
     White/left is negative x and black/right is positive x. Top half is negative y and bottom half is positive y.
 
     Parameters
     ----------
-    rawframe_bgr : numpy.ndarray
-        The image from which the ball position is to be determined.
-        NOTE: Operating under the assumption that there is only one ball (orange object).
+    rawframe_hsv : numpy.ndarray
+        The image from which the ball position is to be determined in HSV.
+        NOTE: Operating under the assumption that there is only one ball (orange object) or none.
     calibration : bool or numpy.ndarray
         Calibration refers to the (re-) calculation of the projection matrix used to level the playing field image.
         Set to true to (re-) calculate; set to false to use a previously calculated one (if it exists); or set to matrix to be used instead.
@@ -36,9 +36,7 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
     https://docs.opencv.org/4.13.0/da/d6e/tutorial_py_geometric_transformations.html
     https://learnopencv.com/find-center-of-blob-centroid-using-opencv-cpp-python/
     """
-    # Convert raw frame to HSV: TODO directly passed as HSV (future)
-    rawframe_hsv = cv2.cvtColor(rawframe_bgr,cv2.COLOR_BGR2HSV)
-    
+    print("called")
     # What to do?
     if type(calibration) == bool:
         global cameraCalibrationMatrix
@@ -49,14 +47,14 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
     
     # Display raw frame and the selection mask from the raw frame:
     #rawSelectionMask = cv2.inRange(rawframe_hsv, np.array([10,120,129]), np.array([40,255,255]))
-    cv2.imshow("raw frame", rawframe_bgr)
+    #cv2.imshow("raw frame", rawframe_bgr)
     #cv2.imshow("raw frame selection", rawSelectionMask)
     
     # Project and resize image:
-    projectedFrame_bgr = cv2.warpPerspective(rawframe_bgr, cameraCalibrationMatrix, fieldSize_mm);
+    projectedFrame_bgr = cv2.warpPerspective(rawframe_hsv, cameraCalibrationMatrix, fieldSize_mm);
     cv2.imshow("projected frame", projectedFrame_bgr)
     
-    # Get ball position from projected image:
+    # Get ball position from projected image:                                   # TODO Did I break this?
     projectedSelectionMask = cv2.inRange(rawframe_hsv, np.array([10,120,129]), np.array([40,255,255]))
     #cv2.imshow("projected frame selection", projectedSelectionMask)
     M = cv2.moments(projectedSelectionMask)
@@ -71,7 +69,3 @@ def detect_ball(rawframe_bgr, calibration, fieldSize_mm=(1200,680)):
  
     # Send ball position via output function (None if not detected):
     output_position(ballpos, fieldSize_mm)
-    
-    # TODO: What are these for? Move somewhere else and fix not exiting!
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()

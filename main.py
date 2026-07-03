@@ -3,28 +3,8 @@ Main entry point for ball tracking system.
 """
 
 import cv2
-import sys
 from camera_handler import CameraHandler
 from ball_detector import detect_ball
-
-
-def process_frame(frame, frame_number):
-    """
-    Process a single frame for ball detection.
-    
-    Parameters
-    ----------
-    frame : numpy.ndarray
-        The image frame to process
-    frame_number : int
-        Frame number (0-indexed)
-    """
-    # Must be true for first/only frame, can be false afterwards
-    if frame_number == 0:
-        print("Calibrating on first frame...")
-        detect_ball(frame, calibration=True)
-    else:
-        detect_ball(frame, calibration=False)
 
 
 def main():
@@ -70,32 +50,36 @@ def main():
     
     choice = input("\nSelect option (1/2/3): ").strip()
     
-    if choice == '1':
-        # Capture single frame only
-        print("\nCapturing single frame...")
-        frame = camera.capture_single()
-        if frame is not None:
-            process_frame(frame, 0)
-        else:
-            print("Failed to capture frame")
+    try:
+        if choice == '1':
+            print("\nCapturing single frame. Press Ctrl+C or q to stop")
+            rawframe_hsv = camera.capture()
+            detect_ball(rawframe_hsv, True)
+            # TODO pause here
             
-    elif choice == '2':
-        # Capture continuous frames
-        print("\nCapturing continuous frames. Press Ctrl+C to stop.")
-        camera.capture_continuous(process_frame, max_frames=None)
-        
-    elif choice == '3':
-        # Capture limited frames
-        try:
-            num_frames = int(input("Enter number of frames to capture: "))
-            print(f"\nCapturing {num_frames} frames...")
-            camera.capture_continuous(process_frame, max_frames=num_frames)
-        except ValueError:
-            print("Invalid number, using default 100 frames")
-            camera.capture_continuous(process_frame, max_frames=100)
-    
-    else:
-        print("Invalid option")
+        elif choice == '2':
+            print("\nCapturing continous frames. Press Ctrl+C to stop.")
+            frame_number = 1
+            while True:
+                rawframe_hsv = camera.capture()
+                detect_ball(rawframe_hsv, frame_number == 1)
+                frame_number += 1
+                
+        elif choice == '3':
+            try:
+                num_frames = int(input("Enter number of frames to capture: "))
+                print(f"\nCapturing {num_frames} frames...")
+            except ValueError:
+                print("Invalid number, using default 100 frames")
+                num_frames = 100
+            for frame_number in range(num_frames):
+                rawframe_hsv = camera.capture()
+                detect_ball(rawframe_hsv, frame_number == 0)
+                    
+        else:
+            print("Invalid option")
+    except KeyboardInterrupt:                                                  # Ctrl+C functionality
+        print("Terminating program")
     
     # Cleanup
     camera.release()
