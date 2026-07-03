@@ -98,7 +98,7 @@ def calculateCornerFromBL(img_bin, startAt, detectDistance, bias=(1.0, 1.0)):
             if img_bin[yy, xx] and currentMD < shortestMD:
                 blc = (xx, yy)
                 shortestMD = currentMD
-                print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
+                #print(f"xx={xx} yy={yy} x={x} y={y} MD={currentMD}")
     return blc
 
 
