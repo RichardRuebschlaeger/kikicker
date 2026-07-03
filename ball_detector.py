@@ -36,7 +36,6 @@ def detect_ball(rawframe_hsv, calibration, fieldSize_mm=(1200,680)):
     https://docs.opencv.org/4.13.0/da/d6e/tutorial_py_geometric_transformations.html
     https://learnopencv.com/find-center-of-blob-centroid-using-opencv-cpp-python/
     """
-    print("called")
     # What to do?
     if type(calibration) == bool:
         global cameraCalibrationMatrix
@@ -47,16 +46,16 @@ def detect_ball(rawframe_hsv, calibration, fieldSize_mm=(1200,680)):
     
     # Display raw frame and the selection mask from the raw frame:
     #rawSelectionMask = cv2.inRange(rawframe_hsv, np.array([10,120,129]), np.array([40,255,255]))
-    #cv2.imshow("raw frame", rawframe_bgr)
+    cv2.imshow("raw frame", cv2.cvtColor(rawframe_hsv, cv2.COLOR_HSV2BGR))
     #cv2.imshow("raw frame selection", rawSelectionMask)
     
     # Project and resize image:
-    projectedFrame_bgr = cv2.warpPerspective(rawframe_hsv, cameraCalibrationMatrix, fieldSize_mm);
-    cv2.imshow("projected frame", projectedFrame_bgr)
+    projectedFrame_hsv = cv2.warpPerspective(rawframe_hsv, cameraCalibrationMatrix, fieldSize_mm);
+    cv2.imshow("projected frame", cv2.cvtColor(projectedFrame_hsv, cv2.COLOR_HSV2BGR))
     
     # Get ball position from projected image:                                   # TODO Did I break this?
-    projectedSelectionMask = cv2.inRange(rawframe_hsv, np.array([10,120,129]), np.array([40,255,255]))
-    #cv2.imshow("projected frame selection", projectedSelectionMask)
+    projectedSelectionMask = cv2.inRange(projectedFrame_hsv, np.array([10,120,129]), np.array([40,255,255]))
+    cv2.imshow("projected frame selection", projectedSelectionMask)
     M = cv2.moments(projectedSelectionMask)
     Mm00 = M["m00"]
     if Mm00 == 0.0:
