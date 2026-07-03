@@ -3,6 +3,7 @@ Main entry point for ball tracking system.
 """
 
 import cv2
+import time
 from camera_handler import CameraHandler
 from ball_detector import detect_ball
 
@@ -60,10 +61,21 @@ def main():
         elif choice == '2':
             print("\nCapturing continous frames. Press Ctrl+C to stop.")
             frame_number = 1
+            lastResetFrames = 1
+            lastResetTime_unix = time.time()
             while True:
                 rawframe_hsv = camera.capture()
                 detect_ball(rawframe_hsv, frame_number == 1)
                 frame_number += 1
+                
+                # Calculate and print FPS:
+                currentTime_unix = time.time()
+                elapsedTime_unix = currentTime_unix - lastResetTime_unix
+                if elapsedTime_unix > 1.0:
+                    fps = (frame_number - lastResetFrames) / elapsedTime_unix
+                    print(f"FPS: {fps:.2f}");
+                    lastResetTime_unix = currentTime_unix
+                    lastResetFrames = frame_number
                 
         elif choice == '3':
             try:
@@ -72,9 +84,20 @@ def main():
             except ValueError:
                 print("Invalid number, using default 100 frames")
                 num_frames = 100
+            lastResetFrames = 0
+            lastResetTime_unix = time.time()
             for frame_number in range(num_frames):
                 rawframe_hsv = camera.capture()
                 detect_ball(rawframe_hsv, frame_number == 0)
+                
+                # Calculate and print FPS:
+                currentTime_unix = time.time()
+                elapsedTime_unix = currentTime_unix - lastResetTime_unix
+                if elapsedTime_unix > 1.0:
+                    fps = (frame_number - lastResetFrames) / elapsedTime_unix
+                    print(f"FPS: {fps:.2f}");
+                    lastResetTime_unix = currentTime_unix
+                    lastResetFrames = frame_number
                     
         else:
             print("Invalid option")

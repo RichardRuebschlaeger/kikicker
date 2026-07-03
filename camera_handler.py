@@ -3,7 +3,6 @@ Camera handler for USB, PiCamera, or test image.
 """
 
 import cv2
-import time
 
 # Try to import picamera2 (only works on Raspberry Pi)
 try:
@@ -22,12 +21,6 @@ class CameraHandler:
         self.test_image = None
         self.cap = None
         self.picam2 = None
-        
-        # FPS tracking
-        self.frame_count = 0
-        self.last_reset_time = time.time()
-        self.last_reset_frames = 0
-        self.current_fps = 0.0
         
     def initialize(self):
         """Initialize camera based on type."""
