@@ -23,7 +23,6 @@ Baud rate: 9600 (configured on the smbus / I2C peripheral, not here directly).
 When the ball is not detected, (x, y) are sent as (0x7FFF, 0x7FFF) = INT16_MAX,
 which serves as a sentinel value the receiver can check for.
 
-@author: richard (extended)
 """
 
 import struct
@@ -63,6 +62,8 @@ _GOAL_ZONE_MM    = 20    # ball must be within this many mm of the edge to score
 def _detect_goal(x: int, fieldSize_mm: tuple) -> None:
     """
     Increment the score when the ball enters a goal zone.
+    Coordinates are CENTER-RELATIVE: x ranges from -(length/2) to +(length/2).
+    Left goal edge is at -(length/2), right goal edge is at +(length/2).
     Uses a cooldown to avoid counting the same goal multiple times.
     Modifies _state in-place.
     """
@@ -70,14 +71,16 @@ def _detect_goal(x: int, fieldSize_mm: tuple) -> None:
     if now < _state["_goal_cooldown"]:
         return  # still in cooldown after last goal
 
-    if x <= _GOAL_ZONE_MM:
+    half_length = fieldSize_mm[0] / 2
+
+    if x <= -half_length + _GOAL_ZONE_MM:
         # Ball at left edge → right team scored
         _state["score_right"] = min(_state["score_right"] + 1, 15)
         _state["_goal_cooldown"] = now + _GOAL_COOLDOWN_S
         print(f"[OUTPUT] GOAL – right team scores! Score: "
               f"{_state['score_left']}:{_state['score_right']}")
 
-    elif x >= fieldSize_mm[0] - _GOAL_ZONE_MM:
+    elif x >= half_length - _GOAL_ZONE_MM:
         # Ball at right edge → left team scored
         _state["score_left"] = min(_state["score_left"] + 1, 15)
         _state["_goal_cooldown"] = now + _GOAL_COOLDOWN_S
@@ -89,10 +92,10 @@ def _update_possession(x: int, fieldSize_mm: tuple) -> None:
     """
     Simple possession heuristic: whichever half of the field the ball
     is in is considered to have possession.
+    Coordinates are CENTER-RELATIVE so the split point is simply 0.
     Modifies _state in-place.
     """
-    mid = fieldSize_mm[0] / 2
-    _state["last_possession"] = 0 if x < mid else 1
+    _state["last_possession"] = 0 if x < 0 else 1
 
 
 def _build_packet(x, y, fieldSize_mm: tuple) -> bytes:
