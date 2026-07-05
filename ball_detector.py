@@ -62,9 +62,13 @@ def detect_ball(rawframe_hsv, calibration, fieldSize_mm=(1200,680)):
         # No orange pixels found -> ball not detected
         ballpos = None
     else:
-        x = int((M["m10"] / Mm00) - (fieldSize_mm[0] / 2.0))
-        y = int((M["m01"] / Mm00) - (fieldSize_mm[1] / 2.0))
-        ballpos = (x, y)
+        # Calculate ball position in pixel coordinates:
+        x = int(M["m10"] / Mm00)
+        y = int(M["m01"] / Mm00)
+        print(f"x={x} y={y}")
+        
+        # Convert pixel coordinates to field coordinates:
+        ballpos = (x - (fieldSize_mm[0] / 2.0), y - (fieldSize_mm[1] / 2.0))
  
     # Send ball position via output function (None if not detected):
     output_position(ballpos, fieldSize_mm)
