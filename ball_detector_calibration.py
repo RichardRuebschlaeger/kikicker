@@ -298,10 +298,10 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     
     """ Calculate the corners of the playing field: """
     # Use these as placeholders for the wall corners during development:
-    tlwc = ( 75,  52)       # 69,  51    71,  47                               # After someone moved the camera / before someone moved the camera
-    blwc = ( 67, 184)       # 58, 192    59, 188
-    trwc = (306,  64)       #309,  61   312,  60
-    brwc = (305, 198)       #307, 204   307, 202
+    tlwc = ( 71,  51)       # 69,  51    71,  47                               # After someone moved the camera / before someone moved the camera
+    blwc = ( 58, 192)       # 58, 192    59, 188
+    trwc = (309,  62)       #309,  61   312,  60
+    brwc = (307, 202)       #307, 203   307, 202
     
     # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
     tlwc = (tlwc[0] + 5, tlwc[1] + 5)
