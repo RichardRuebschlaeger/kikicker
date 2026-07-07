@@ -297,17 +297,17 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     
     
     """ Calculate the corners of the playing field: """
-    # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
-    #tlwc = (tlwc[0] + 5, tlwc[1] + 5)
-    #blwc = (blwc[0] + 5, blwc[1])
-    #trwc = (trwc[0] - 5, trwc[1] + 5)
-    #brwc = (brwc[0] - 5, brwc[1] - 5)
-    
     # Use these as placeholders for the wall corners during development:
-    #tlwc = (75, 52)
-    #blwc = (67, 184)
-    #trwc = (306, 64)
-    #brwc = (305, 198)
+    tlwc = ( 75,  52)       # 69,  51    71,  47                               # After someone moved the camera / before someone moved the camera
+    blwc = ( 67, 184)       # 58, 192    59, 188
+    trwc = (306,  64)       #309,  61   312,  60
+    brwc = (305, 198)       #307, 204   307, 202
+    
+    # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
+    tlwc = (tlwc[0] + 5, tlwc[1] + 5)
+    blwc = (blwc[0] + 5, blwc[1] - 5)
+    trwc = (trwc[0] - 5, trwc[1] + 5)
+    brwc = (brwc[0] - 5, brwc[1] - 6)
     
     # Selection based on color:                                                # No benefit from morphological closing (tested)
     imselect = cv2.inRange(rawframe_hsv, np.array([35,0,57]), np.array([120,115,147]))
@@ -322,18 +322,18 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     # Detecting field corners by testing for minimum Manhattan distance:
     #print("field")                                                             # For better display on cmd
     detectDistance = (20, 20)
-    #tlfc = calculateCornerFromTL(imselect, tlwc, detectDistance)
-    #blfc = calculateCornerFromBL(imselect, blwc, detectDistance)
-    #trfc = calculateCornerFromTR(imselect, trwc, detectDistance)
-    #brfc = calculateCornerFromBR(imselect, brwc, detectDistance)
+    tlfc = calculateCornerFromTL(imselect, tlwc, detectDistance)
+    blfc = calculateCornerFromBL(imselect, blwc, detectDistance)
+    trfc = calculateCornerFromTR(imselect, trwc, detectDistance)
+    brfc = calculateCornerFromBR(imselect, brwc, detectDistance)
 
 
     """ Calculating the projection matrix: """
     # Use these as placeholders for the field corners during development:
-    tlfc = (74, 53) #78, 57          80, 54
-    blfc = (65, 187) #68, 186         69, 182
-    trfc = (305, 65) #301, 68         303, 67
-    brfc = (303, 197) #299, 196        300 195
+    #tlfc = ( 74,  53)      # 78,  57    80,  54                               # After someone moved the camera / before someone moved the camera
+    #blfc = ( 65, 187)      # 68, 186    69, 182
+    #trfc = (305,  65)      #301,  68   303,  67
+    #brfc = (303, 197)      #299, 196   300, 195
     
     # Generate field corner source list (assuming the corners are found):
     src = np.array([tlfc, blfc, trfc, brfc], np.float32)
