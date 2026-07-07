@@ -330,10 +330,10 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
 
     """ Calculating the projection matrix: """
     # Use these as placeholders for the field corners during development:
-    #tlfc = tlwc
-    #blfc = blwc
-    #trfc = trwc
-    #brfc = brwc
+    tlfc = (74, 53) #78, 57          80, 54
+    blfc = (65, 187) #68, 186         69, 182
+    trfc = (305, 65) #301, 68         303, 67
+    brfc = (303, 197) #299, 196        300 195
     
     # Generate field corner source list (assuming the corners are found):
     src = np.array([tlfc, blfc, trfc, brfc], np.float32)
