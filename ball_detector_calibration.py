@@ -272,36 +272,42 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     cv2.imshow("imgray", imgray)
     
     # Detecting the support beams by testing for minimum Manhattan distance:
-    #print("support beam")                                                      # For better display on cmd
+    print("support beam")                                                      # For better display on cmd
     detectDistance = (60, 60)
-    #tlsb = calculateCornerFromTL(imgray, (0,0), detectDistance, (1.0,1.5))
+    #tlsb = calculateCornerFromTL(imgray, (0, 0), detectDistance, (1.0,1.5))
     #blsb = calculateCornerFromBL(imgray, (0, imgray.shape[0] -1), detectDistance, (1.0,1.5)) # Actually top left of wall corner
-    #trsb = calculateCornerFromTR(imgray, (imgray.shape[1] -7, 0), detectDistance) # Needs to start 6px left from the right corner, because otherwise it will detect the cable conduit underneath the window
-    #brsb = calculateCornerFromBR(imgray, (imgray.shape[1] -1, imgray.shape[0] -1), detectDistance)
+    trsb = calculateCornerFromTR(imgray, (imgray.shape[1] -16, 0), detectDistance) # Needs to start 15px left from the right corner, because otherwise it will detect the cable conduit underneath the window
+    brsb = calculateCornerFromBR(imgray, (imgray.shape[1] -16, imgray.shape[0] -1), detectDistance)
     
     
     """ Calculate the corners of the playing field walls: """
-    # Jump to the center by 15 px on the x-axis only, so that we are past the support beams:
-    #tlsb = (tlsb[0] + 15, tlsb[1])
-    #blsb = (blsb[0] + 20, blsb[1])                                             # Actually top left of wall corner
-    #trsb = (trsb[0] - 15, trsb[1])
-    #brsb = (brsb[0] - 15, brsb[1])
+    # Use these as placeholders for the wall corners during development:
+    tlsb = ( 33, 53)        # 33, 53     41, 45                                # After someone moved the camera / before someone moved the camera
+    blsb = ( 20,181)        # 21,188     20,181
+    #trsb = () #339, 62 #338, 58
+    #brsb = () #335,210 #338,206
+    
+    # Jump to the center by 25px on the x-axis only, so that we are past the support beams:
+    tlsb = (tlsb[0] + 25, tlsb[1])
+    blsb = (blsb[0] + 25, blsb[1])
+    trsb = (trsb[0] - 25, trsb[1])
+    brsb = (brsb[0] - 25, brsb[1])
     
     # Detecting wall corners by testing for minimum Manhattan distance:
-    #print("wall")                                                              # For better display on cmd
+    print("wall")                                                              # For better display on cmd
     detectDistance = (25, 25)
-    #tlwc = calculateCornerFromTL(imgray, tlsb, detectDistance)
-    #blwc = calculateCornerFromTL(imgray, blsb, detectDistance)
-    #trwc = calculateCornerFromTR(imgray, trsb, detectDistance)
-    #brwc = calculateCornerFromBR(imgray, brsb, detectDistance)
+    tlwc = calculateCornerFromTL(imgray, tlsb, detectDistance)
+    blwc = calculateCornerFromTL(imgray, blsb, detectDistance)
+    trwc = calculateCornerFromTR(imgray, trsb, detectDistance)
+    brwc = calculateCornerFromBR(imgray, brsb, detectDistance)
     
     
     """ Calculate the corners of the playing field: """
     # Use these as placeholders for the wall corners during development:
-    tlwc = ( 71,  51)       # 69,  51    71,  47                               # After someone moved the camera / before someone moved the camera
-    blwc = ( 58, 192)       # 58, 192    59, 188
-    trwc = (309,  62)       #309,  61   312,  60
-    brwc = (307, 202)       #307, 203   307, 202
+    #tlwc = ( 71,  51)       # 69,  51    71,  47                               # After someone moved the camera / before someone moved the camera
+    #blwc = ( 58, 192)       # 58, 192    59, 188
+    #trwc = (309,  62)       #309,  61   312,  60
+    #brwc = (307, 202)       #307, 203   307, 202
     
     # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
     tlwc = (tlwc[0] + 5, tlwc[1] + 5)
@@ -330,7 +336,7 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
 
     """ Calculating the projection matrix: """
     # Use these as placeholders for the field corners during development:
-    #tlfc = ( 74,  53)      # 78,  57    80,  54                               # After someone moved the camera / before someone moved the camera
+    #tlfc = ( 74,  53)      # 78,  57    80,  54                                # After someone moved the camera / before someone moved the camera
     #blfc = ( 65, 187)      # 68, 186    69, 182
     #trfc = (305,  65)      #301,  68   303,  67
     #brfc = (303, 197)      #299, 196   300, 195
