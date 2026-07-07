@@ -274,34 +274,34 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     # Detecting the support beams by testing for minimum Manhattan distance:
     #print("support beam")                                                      # For better display on cmd
     detectDistance = (60, 60)
-    tlsb = calculateCornerFromTL(imgray, (0,0), detectDistance, (1.0,1.5))
-    blsb = calculateCornerFromBL(imgray, (0, imgray.shape[0] -1), detectDistance, (1.0,1.5)) # Actually top left of wall corner
-    trsb = calculateCornerFromTR(imgray, (imgray.shape[1] -7, 0), detectDistance) # Needs to start 6px left from the right corner, because otherwise it will detect the cable conduit underneath the window
-    brsb = calculateCornerFromBR(imgray, (imgray.shape[1] -1, imgray.shape[0] -1), detectDistance)
+    #tlsb = calculateCornerFromTL(imgray, (0,0), detectDistance, (1.0,1.5))
+    #blsb = calculateCornerFromBL(imgray, (0, imgray.shape[0] -1), detectDistance, (1.0,1.5)) # Actually top left of wall corner
+    #trsb = calculateCornerFromTR(imgray, (imgray.shape[1] -7, 0), detectDistance) # Needs to start 6px left from the right corner, because otherwise it will detect the cable conduit underneath the window
+    #brsb = calculateCornerFromBR(imgray, (imgray.shape[1] -1, imgray.shape[0] -1), detectDistance)
     
     
     """ Calculate the corners of the playing field walls: """
     # Jump to the center by 15 px on the x-axis only, so that we are past the support beams:
-    tlsb = (tlsb[0] + 15, tlsb[1])
-    blsb = (blsb[0] + 20, blsb[1])                                             # Actually top left of wall corner
-    trsb = (trsb[0] - 15, trsb[1])
-    brsb = (brsb[0] - 15, brsb[1])
+    #tlsb = (tlsb[0] + 15, tlsb[1])
+    #blsb = (blsb[0] + 20, blsb[1])                                             # Actually top left of wall corner
+    #trsb = (trsb[0] - 15, trsb[1])
+    #brsb = (brsb[0] - 15, brsb[1])
     
     # Detecting wall corners by testing for minimum Manhattan distance:
     #print("wall")                                                              # For better display on cmd
     detectDistance = (25, 25)
-    tlwc = calculateCornerFromTL(imgray, tlsb, detectDistance)
-    blwc = calculateCornerFromTL(imgray, blsb, detectDistance)
-    trwc = calculateCornerFromTR(imgray, trsb, detectDistance)
-    brwc = calculateCornerFromBR(imgray, brsb, detectDistance)
+    #tlwc = calculateCornerFromTL(imgray, tlsb, detectDistance)
+    #blwc = calculateCornerFromTL(imgray, blsb, detectDistance)
+    #trwc = calculateCornerFromTR(imgray, trsb, detectDistance)
+    #brwc = calculateCornerFromBR(imgray, brsb, detectDistance)
     
     
     """ Calculate the corners of the playing field: """
     # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
-    tlwc = (tlwc[0] + 5, tlwc[1] + 5)
-    blwc = (blwc[0] + 5, blwc[1])
-    trwc = (trwc[0] - 5, trwc[1] + 5)
-    brwc = (brwc[0] - 5, brwc[1] - 5)
+    #tlwc = (tlwc[0] + 5, tlwc[1] + 5)
+    #blwc = (blwc[0] + 5, blwc[1])
+    #trwc = (trwc[0] - 5, trwc[1] + 5)
+    #brwc = (brwc[0] - 5, brwc[1] - 5)
     
     # Use these as placeholders for the wall corners during development:
     #tlwc = (75, 52)
@@ -322,10 +322,10 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     # Detecting field corners by testing for minimum Manhattan distance:
     #print("field")                                                             # For better display on cmd
     detectDistance = (20, 20)
-    tlfc = calculateCornerFromTL(imselect, tlwc, detectDistance)
-    blfc = calculateCornerFromBL(imselect, blwc, detectDistance)
-    trfc = calculateCornerFromTR(imselect, trwc, detectDistance)
-    brfc = calculateCornerFromBR(imselect, brwc, detectDistance)
+    #tlfc = calculateCornerFromTL(imselect, tlwc, detectDistance)
+    #blfc = calculateCornerFromBL(imselect, blwc, detectDistance)
+    #trfc = calculateCornerFromTR(imselect, trwc, detectDistance)
+    #brfc = calculateCornerFromBR(imselect, brwc, detectDistance)
 
 
     """ Calculating the projection matrix: """
