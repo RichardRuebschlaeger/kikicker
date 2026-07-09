@@ -273,19 +273,19 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     
     # Detecting the support beams by testing for minimum Manhattan distance:
     print("support beam")                                                      # For better display on cmd
-    detectDistance = (60, 60)
-    #tlsb = calculateCornerFromTL(imgray, (0, 0), detectDistance, (1.0,1.5))
-    #blsb = calculateCornerFromBL(imgray, (0, imgray.shape[0] -1), detectDistance, (1.0,1.5)) # Actually top left of wall corner
+    detectDistance = (70, 70)
+    tlsb = calculateCornerFromTL(imgray, (0, 0), detectDistance, (1.0,1.5))
+    blsb = calculateCornerFromBL(imgray, (0, imgray.shape[0] -1), detectDistance, (1.0,1.5)) # Actually top left of wall corner
     trsb = calculateCornerFromTR(imgray, (imgray.shape[1] -16, 0), detectDistance) # Needs to start 15px left from the right corner, because otherwise it will detect the cable conduit underneath the window
-    brsb = calculateCornerFromBR(imgray, (imgray.shape[1] -16, imgray.shape[0] -1), detectDistance) #TODO
+    brsb = calculateCornerFromBR(imgray, (imgray.shape[1] -16, imgray.shape[0] -1), detectDistance)
     
     
     """ Calculate the corners of the playing field walls: """
     # Use these as placeholders for the wall corners during development:
-    tlsb = ( 33, 53)        # 33, 53     41, 45                                # After someone moved the camera / before someone moved the camera
-    blsb = ( 20,181)        # 21,188     20,181
-    #trsb = () #339, 62 #338, 58
-    #brsb = () #335,210 #338,206 TODO
+    #tlsb = ( 33, 53)        # 33, 53     41, 45                                # After someone moved the camera / before someone moved the camera
+    #blsb = ( 20,181)        # 21,188     20,181
+    #trsb = (339, 62)        #339, 62    338, 58
+    #brsb = (335,210)        #335,210    338,206
     
     # Jump to the center by 25px on the x-axis only, so that we are past the support beams:
     tlsb = (tlsb[0] + 25, tlsb[1])
@@ -299,6 +299,8 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     tlwc = calculateCornerFromTL(imgray, tlsb, detectDistance)
     blwc = calculateCornerFromTL(imgray, blsb, detectDistance)
     trwc = calculateCornerFromTR(imgray, trsb, detectDistance)
+    if trwc is None:
+        trwc = calculateCornerFromBR(imgray, trsb, detectDistance)
     brwc = calculateCornerFromBR(imgray, brsb, detectDistance)
     
     
@@ -342,6 +344,7 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     #brfc = (303, 197)      #299, 196   300, 195
     
     # Generate field corner source list (assuming the corners are found):
+    #print(tlfc, blfc, trfc, brfc)
     src = np.array([tlfc, blfc, trfc, brfc], dtype=np.float32)
 
     # Generate corner destination list:
