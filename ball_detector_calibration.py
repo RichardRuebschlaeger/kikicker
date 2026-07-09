@@ -277,7 +277,7 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     #tlsb = calculateCornerFromTL(imgray, (0, 0), detectDistance, (1.0,1.5))
     #blsb = calculateCornerFromBL(imgray, (0, imgray.shape[0] -1), detectDistance, (1.0,1.5)) # Actually top left of wall corner
     trsb = calculateCornerFromTR(imgray, (imgray.shape[1] -16, 0), detectDistance) # Needs to start 15px left from the right corner, because otherwise it will detect the cable conduit underneath the window
-    brsb = calculateCornerFromBR(imgray, (imgray.shape[1] -16, imgray.shape[0] -1), detectDistance)
+    brsb = calculateCornerFromBR(imgray, (imgray.shape[1] -16, imgray.shape[0] -1), detectDistance) #TODO
     
     
     """ Calculate the corners of the playing field walls: """
@@ -285,7 +285,7 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     tlsb = ( 33, 53)        # 33, 53     41, 45                                # After someone moved the camera / before someone moved the camera
     blsb = ( 20,181)        # 21,188     20,181
     #trsb = () #339, 62 #338, 58
-    #brsb = () #335,210 #338,206
+    #brsb = () #335,210 #338,206 TODO
     
     # Jump to the center by 25px on the x-axis only, so that we are past the support beams:
     tlsb = (tlsb[0] + 25, tlsb[1])
@@ -342,13 +342,14 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     #brfc = (303, 197)      #299, 196   300, 195
     
     # Generate field corner source list (assuming the corners are found):
-    src = np.array([tlfc, blfc, trfc, brfc], np.float32)
+    src = np.array([tlfc, blfc, trfc, brfc], dtype=np.float32)
 
     # Generate corner destination list:
     dst = np.array([(0,               0),                                      #TLD (white)
                     (0,               fieldSize_mm[1]),                        #BLD (white)
                     (fieldSize_mm[0], 0),                                      #TRD (black)
-                    (fieldSize_mm[0], fieldSize_mm[1])],np.float32)            #BRD (black)
+                    (fieldSize_mm[0], fieldSize_mm[1])],                       #BRD (black)
+                   dtype = np.float32)
                 
     # Calculate perspective transformation matrix:
     #P = np.eye(3)
