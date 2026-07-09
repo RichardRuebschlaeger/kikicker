@@ -13,7 +13,11 @@ from ball_detector_calibration import calculateProjectionMatrix
 def detect_ball(rawframe_hsv, calibration, fieldSize_mm=(1200,680)):
     """
     Calculates the position of at most one orange ball on the playing field. The position relative to the center of the playing field.
-    White/left is negative x and black/right is positive x. Top half is negative y and bottom half is positive y.
+    White/left is negative x and black/right is positive x. Top half is negative y and bottom half is positive y, when looking at the field
+    so that white is left and black is right.
+    
+    This function calls the output_position-function and transfers relevant values. Passes None as the ball position if hands or arms or no
+    ball is detected.
 
     Parameters
     ----------
@@ -53,16 +57,20 @@ def detect_ball(rawframe_hsv, calibration, fieldSize_mm=(1200,680)):
     projectedFrame_hsv = cv2.warpPerspective(rawframe_hsv, cameraCalibrationMatrix, fieldSize_mm);
     cv2.imshow("projected frame", cv2.cvtColor(projectedFrame_hsv, cv2.COLOR_HSV2BGR))
     
-    # Get ball position from projected image:                                   # TODO Did I break this?
-    projectedSelectionMask = cv2.inRange(projectedFrame_hsv, np.array([10,120,129]), np.array([40,255,255]))
+    # Get ball position from projected image:
+    projectedSelectionMask = cv2.inRange(projectedFrame_hsv, np.array([10,85,129]), np.array([40,255,255]))
     cv2.imshow("projected frame selection", projectedSelectionMask)
     M = cv2.moments(projectedSelectionMask)
     Mm00 = M["m00"]
+    print(Mm00)
     if Mm00 == 0.0:
         # No orange pixels found -> ball not detected
         ballpos = None
+    elif Mm00 > 1000000:
+        # Lots of orange pixels -> hands over the field, can't find ball:
+        ballpos = None
     else:
-        # Calculate ball position in pixel coordinates:
+        # Calculate ball position in pixel coordinates (Mm00 normally around 330k):
         x = int(M["m10"] / Mm00)
         y = int(M["m01"] / Mm00)
         print(f"x={x} y={y}")
