@@ -292,7 +292,7 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     cv2.imshow("imgray", imgray)
     
     # Detecting the support beams by testing for minimum Manhattan distance:
-    print("support beam")                                                      # For better display on cmd
+    #print("support beam")                                                      # For better display on cmd
     detectDistance = (70, 70)
     tlsb = calculateCornerFromTL(imgray, (0, 0), detectDistance, (1.0,1.5))
     blsb = calculateCornerFromBL(imgray, (0, imgray.shape[0] -1), detectDistance, (1.0,1.5)) # Actually top left of wall corner
@@ -315,7 +315,7 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     brsb = (brsb[0] - 25, brsb[1])
     
     # Detecting wall corners by testing for minimum Manhattan distance:
-    print("wall")                                                              # For better display on cmd
+    #print("wall")                                                              # For better display on cmd
     detectDistance = (25, 25)
     tlwc = calculateCornerFromTL(imgray, tlsb, detectDistance)
     blwc = calculateCornerFromTL(imgray, blsb, detectDistance)
@@ -340,7 +340,7 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     brwc = (brwc[0] - 5, brwc[1] - 6)
     
     # Selection based on color:                                                # No benefit from morphological closing (tested)
-    imselect = cv2.inRange(rawframe_hsv, np.array([35,0,57]), np.array([120,115,147]))
+    imselect = cv2.inRange(rawframe_hsv, np.array([35,0,45]), np.array([120,115,147]))
     cv2.imshow("imselect", imselect)
     
     # Selection based on brightness:
@@ -350,7 +350,7 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     #cv2.imshow("imselect", imselect)"""
     
     # Detecting field corners by testing for minimum Manhattan distance:
-    print("field")                                                             # For better display on cmd
+    #print("field")                                                             # For better display on cmd
     detectDistance = (20, 20)
     tlfc = calculateCornerFromTL(imselect, tlwc, detectDistance)
     blfc = calculateCornerFromBL(imselect, blwc, detectDistance)
