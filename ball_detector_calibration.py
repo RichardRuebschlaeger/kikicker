@@ -47,16 +47,21 @@ def calculateCornerFromTL(img_bin, startAt, detectDistance, bias=(1.0, 1.0)):
     -------
     tuple(int, int) or None
         The coordinates of the corner or None if none was found.
-
-    Notes:
-        There is no check, whether an accessed pixel is outside the image.
     """
     shortestMD = float("inf")
     tlc = None
     for x in range(detectDistance[0]):
         xx = x + startAt[0]
+        if xx < 0:
+            continue
+        if xx >= img_bin.shape[1]:
+            break;
         for y in range(detectDistance[1]):
             yy = y + startAt[1]
+            if yy < 0:
+                continue
+            if yy >= img_bin.shape[0]:
+                break
             currentMD = (bias[0] * x) + (bias[1] * y)
             if img_bin[yy, xx] and currentMD < shortestMD:
                 tlc = (xx, yy)
@@ -84,17 +89,22 @@ def calculateCornerFromBL(img_bin, startAt, detectDistance, bias=(1.0, 1.0)):
     -------
     tuple(int, int) or None
         The coordinates of the corner or None if none was found.
-
-    Notes:
-        There is no check, whether an accessed pixel is outside the image.
     """
     shortestMD = float("inf")
     blc = None
     for x in range(detectDistance[0]):
         xx = x + startAt[0]
+        if xx < 0:
+            continue
+        if xx >= img_bin.shape[1]:
+            break;
         for y in range(-detectDistance[1] +1, 1):
-            currentMD = x - y
             yy = y + startAt[1]
+            if yy < 0:
+                continue
+            if yy >= img_bin.shape[0]:
+                break
+            currentMD = x - y
             if img_bin[yy, xx] and currentMD < shortestMD:
                 blc = (xx, yy)
                 shortestMD = currentMD
@@ -121,17 +131,22 @@ def calculateCornerFromTR(img_bin, startAt, detectDistance, bias=(1.0,1.0)):
     -------
     tuple(int, int) or None
         The coordinates of the corner or None if none was found.
-
-    Notes:
-        There is no check, whether an accessed pixel is outside the image.
     """
     shortestMD = float("inf")
     trc = None
     for x in range(-detectDistance[0] +1, 1):
         xx = x + startAt[0]
+        if xx < 0:
+            continue
+        if xx >= img_bin.shape[1]:
+            break
         for y in range(detectDistance[1]):
-            currentMD = (bias[0] * -x) + (bias[1] * y)
             yy = y + startAt[1]
+            if yy < 0:
+                continue
+            if yy >= img_bin.shape[0]:
+                break
+            currentMD = (bias[0] * -x) + (bias[1] * y)
             if img_bin[yy, xx] and currentMD < shortestMD:
                 trc = (xx, yy)
                 shortestMD = currentMD
@@ -158,17 +173,22 @@ def calculateCornerFromBR(img_bin, startAt, detectDistance, bias=(1.0,1.0)):
     -------
     tuple(int, int) or None
         The coordinates of the corner or None if none was found.
-
-    Notes:
-        There is no check, whether an accessed pixel is outside the image.
     """
     shortestMD = float("inf")
     brc = None
     for x in range(-detectDistance[0] +1, 1):
         xx = x + startAt[0]
+        if xx < 0:
+            continue
+        if xx >= img_bin.shape[1]:
+            break
         for y in range(-detectDistance[1] +1, 1):
-            currentMD = -(bias[0] * x) - (bias[1] * y)
             yy = y + startAt[1]
+            if yy < 0:
+                continue
+            if yy >= img_bin.shape[0]:
+                break
+            currentMD = -(bias[0] * x) - (bias[1] * y)
             if img_bin[yy, xx] and currentMD < shortestMD:
                 brc = (xx, yy)
                 shortestMD = currentMD
