@@ -308,6 +308,7 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     #brsb = (335,210)        #335,210    338,206
     
     # Jump to the center by 25px on the x-axis only, so that we are past the support beams:
+    #print(tlsb, blsb, trsb, brsb)
     tlsb = (tlsb[0] + 25, tlsb[1])
     blsb = (blsb[0] + 25, blsb[1])
     trsb = (trsb[0] - 25, trsb[1])
@@ -332,8 +333,9 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     #brwc = (307, 202)       #307, 203   307, 202
     
     # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
+    #print(tlwc, blwc, trwc, brwc)
     tlwc = (tlwc[0] + 5, tlwc[1] + 5)
-    blwc = (blwc[0] + 5, blwc[1] - 5)
+    blwc = (blwc[0] + 5, blwc[1])                                              # upwards offset causes the field corner to move as well (little height difference)
     trwc = (trwc[0] - 5, trwc[1] + 5)
     brwc = (brwc[0] - 5, brwc[1] - 6)
     
@@ -348,7 +350,7 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     #cv2.imshow("imselect", imselect)"""
     
     # Detecting field corners by testing for minimum Manhattan distance:
-    #print("field")                                                             # For better display on cmd
+    print("field")                                                             # For better display on cmd
     detectDistance = (20, 20)
     tlfc = calculateCornerFromTL(imselect, tlwc, detectDistance)
     blfc = calculateCornerFromBL(imselect, blwc, detectDistance)
