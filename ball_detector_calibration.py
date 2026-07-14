@@ -280,6 +280,9 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     
     Projection Matrix:
         https://docs.opencv.org/4.13.0/da/d6e/tutorial_py_geometric_transformations.html
+    
+    Point selection from displayed image:
+        https://blog.finxter.com/5-best-ways-to-display-the-coordinates-of-points-clicked-on-an-image-in-opencv-python/
     """
     
     
