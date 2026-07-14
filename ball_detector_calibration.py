@@ -198,6 +198,37 @@ def calculateCornerFromBR(img_bin, startAt, detectDistance, bias=(1.0,1.0)):
 
 
 
+def manualCornerCorrection(rawframe_hsv, detectedCorner, corner):
+    """
+    Used for manual corner correction.
+
+    Parameters
+    ----------
+    rawframe_bgr : numpy.ndarray
+        The image in which the corner is to be selected.
+    detectedCorner : tuple(int, int) or None
+        The automatically detected corner used as a hint. None if none was detected. Used to determine the displayed text.
+    corner : str
+        The corner to be selected. Used to determine the displayed text.
+
+    Returns
+    -------
+    tuple(int, int)
+        The new field corner coordinates. The same as detectedCorner if no correction was deemed necessary.
+        
+    TODO:
+        -Reduce conversions BGR->HSV->BGR from file camera handler?
+        -Actual point selection
+    
+    Point selection from displayed image:
+        https://blog.finxter.com/5-best-ways-to-display-the-coordinates-of-points-clicked-on-an-image-in-opencv-python/
+    """
+    
+    return ()
+
+
+
+
 def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     """
     Calculates the projection matrix required to project the passed image, so that the field corners are the new image corners.
@@ -280,9 +311,6 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     
     Projection Matrix:
         https://docs.opencv.org/4.13.0/da/d6e/tutorial_py_geometric_transformations.html
-    
-    Point selection from displayed image:
-        https://blog.finxter.com/5-best-ways-to-display-the-coordinates-of-points-clicked-on-an-image-in-opencv-python/
     """
     
     
@@ -327,7 +355,8 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     detectDistance = (20, 20)
     tlfc = calculateCornerFromTL(imselect, tlwc, detectDistance)
     
-    # TODO Manual correction:
+    # Manual correction:
+    tlfc = manualCornerCorrection(rawframe_hsv, tlfc, "TLFC")
 
 
     """ BLFC: """
@@ -351,7 +380,8 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     detectDistance = (20, 20)
     blfc = calculateCornerFromBL(imselect, blwc, detectDistance)
     
-    # TODO Manual correction:
+    # Manual correction:
+    blfc = manualCornerCorrection(rawframe_hsv, blfc, "BLFC")
     
     
     """ TRFC: """
@@ -377,7 +407,8 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     detectDistance = (20, 20)
     trfc = calculateCornerFromTR(imselect, trwc, detectDistance)
     
-    # TODO Manual correction:
+    # Manual correction:
+    trfc = manualCornerCorrection(rawframe_hsv, trfc, "TRFC")
     
     
     """ BRFC: """
@@ -401,7 +432,8 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     detectDistance = (20, 20)
     brfc = calculateCornerFromBR(imselect, brwc, detectDistance)
     
-    # TODO Manual correction:
+    # Manual correction:
+    brfc = manualCornerCorrection(rawframe_hsv, brfc, "BRFC")
     
     
     """ Calculating the projection matrix: """
