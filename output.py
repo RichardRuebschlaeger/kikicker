@@ -162,7 +162,7 @@ def _send_i2c(packet: bytes) -> None:
 
 # ── Public API ─────────────────────────────────────────────────────────────────
 
-def output_position(ballpos_mm, fieldSize_mm) -> None:
+def output_position(ballpos_mm, fieldSize_mm=(1200,680)) -> None:
     """
     Process one frame of ball tracking data, update state, and transmit
     the I2C packet.
@@ -172,9 +172,8 @@ def output_position(ballpos_mm, fieldSize_mm) -> None:
     ballpos_mm : tuple(int, int) or None
         Current ball position in millimetres from the top-left corner of
         the playing field, or None when the ball is not detected.
-    fieldSize_mm : tuple(int, int)
-        (length_mm, width_mm) of the playing field. Default field is
-        1200 × 680 mm.
+    fieldSize_mm : tuple(int, int), optional
+        The size of the playing field measures in millimeters. The default is (1200, 680) or 120cm x 68cm.
     """
     now = time.monotonic()
 

@@ -5,7 +5,9 @@ Main entry point for ball tracking system.
 import cv2
 import time
 from camera_handler import CameraHandler
+from ball_detector_calibration import calculateProjectionMatrix
 from ball_detector import detect_ball
+from output import output_position
 
 
 def main():
@@ -52,22 +54,26 @@ def main():
     choice = input("\nSelect option (1/2/3): ").strip()
     
     try:
+        rawframe_hsv = camera.capture()
+        P = calculateProjectionMatrix(rawframe_hsv)
+        
         if choice == '1':
             print("\nCapturing single frame. Press any key to stop")
-            rawframe_hsv = camera.capture()
-            detect_ball(rawframe_hsv, True)
-            # TODO pause here
+            ballpos_mm = detect_ball(rawframe_hsv, P)
+            output_position(ballpos_mm)
             cv2.waitKey(0)
             
         elif choice == '2':
             print("\nCapturing continous frames. Press Ctrl+C to stop.")
-            frame_number = 1
+            frame_number = 0
             lastResetFrames = 1
             lastResetTime_unix = time.time()
+            
             while True:
-                rawframe_hsv = camera.capture()
-                detect_ball(rawframe_hsv, frame_number == 1)
                 frame_number += 1
+                rawframe_hsv = camera.capture()
+                ballpos_mm = detect_ball(rawframe_hsv, P)
+                output_position(ballpos_mm)
                 
                 # Calculate and print FPS:
                 currentTime_unix = time.time()
@@ -82,14 +88,16 @@ def main():
             try:
                 num_frames = int(input("Enter number of frames to capture: "))
                 print(f"\nCapturing {num_frames} frames...")
+                num_frames += 1
             except ValueError:
                 print("Invalid number, using default 100 frames")
-                num_frames = 100
+                num_frames = 101
             lastResetFrames = 0
             lastResetTime_unix = time.time()
-            for frame_number in range(num_frames):
+            for frame_number in range(1, num_frames):
                 rawframe_hsv = camera.capture()
-                detect_ball(rawframe_hsv, frame_number == 0)
+                ballpos_mm = detect_ball(rawframe_hsv, P)
+                output_position(ballpos_mm)
                 
                 # Calculate and print FPS:
                 currentTime_unix = time.time()
