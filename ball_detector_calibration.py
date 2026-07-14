@@ -286,7 +286,8 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     """
     
     
-    """ Calculate the edges of the support beams: """
+    """ Preparation: """
+    # Grayscale image for wall detection:
     _, _, imgray = cv2.split(rawframe_hsv)                                     # V-channel effectively is grayscale image -> grayscale conversion should be cheap
     _, imgray = cv2.threshold(imgray, 120, 255, cv2.THRESH_BINARY)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))                  # Benefits from morphological opening (tested)
@@ -294,79 +295,122 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     imgray = cv2.dilate(imgray, kernel)
     cv2.imshow("imgray", imgray)
     
-    # Detecting the support beams by testing for minimum Manhattan distance:
-    #print("support beam")                                                      # For better display on cmd
-    detectDistance = (70, 70)
-    tlsb = calculateCornerFromTL(imgray, (0, 0), detectDistance, (1.0,1.5))
-    blsb = calculateCornerFromBL(imgray, (0, imgray.shape[0] -1), detectDistance, (1.0,1.5)) # Actually top left of wall corner
-    trsb = calculateCornerFromTR(imgray, (imgray.shape[1] -16, 0), detectDistance) # Needs to start 15px left from the right corner, because otherwise it will detect the cable conduit underneath the window
-    brsb = calculateCornerFromBR(imgray, (imgray.shape[1] -16, imgray.shape[0] -1), detectDistance)
-    
-    
-    """ Calculate the corners of the playing field walls: """
-    # Use these as placeholders for the wall corners during development:
-    #tlsb = ( 33, 53)        # 33, 53     41, 45                                # After someone moved the camera / before someone moved the camera
-    #blsb = ( 20,181)        # 21,188     20,181
-    #trsb = (339, 62)        #339, 62    338, 58
-    #brsb = (335,210)        #335,210    338,206
-    
-    # Jump to the center by 25px on the x-axis only, so that we are past the support beams:
-    #print(tlsb, blsb, trsb, brsb)
-    tlsb = (tlsb[0] + 25, tlsb[1])
-    blsb = (blsb[0] + 25, blsb[1])
-    trsb = (trsb[0] - 25, trsb[1])
-    brsb = (brsb[0] - 25, brsb[1])
-    
-    # Detecting wall corners by testing for minimum Manhattan distance:
-    #print("wall")                                                              # For better display on cmd
-    detectDistance = (25, 25)
-    tlwc = calculateCornerFromTL(imgray, tlsb, detectDistance)
-    blwc = calculateCornerFromTL(imgray, blsb, detectDistance)
-    trwc = calculateCornerFromTR(imgray, trsb, detectDistance)
-    if trwc is None:
-        trwc = calculateCornerFromBR(imgray, trsb, detectDistance)
-    brwc = calculateCornerFromBR(imgray, brsb, detectDistance)
-    
-    
-    """ Calculate the corners of the playing field: """
-    # Use these as placeholders for the wall corners during development:
-    #tlwc = ( 71,  51)       # 69,  51    71,  47                               # After someone moved the camera / before someone moved the camera
-    #blwc = ( 58, 192)       # 58, 192    59, 188
-    #trwc = (309,  62)       #309,  61   312,  60
-    #brwc = (307, 202)       #307, 203   307, 202
-    
-    # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
-    #print(tlwc, blwc, trwc, brwc)
-    tlwc = (tlwc[0] + 5, tlwc[1] + 5)
-    blwc = (blwc[0] + 5, blwc[1])                                              # upwards offset causes the field corner to move as well (little height difference)
-    trwc = (trwc[0] - 5, trwc[1] + 5)
-    brwc = (brwc[0] - 5, brwc[1] - 6)
-    
-    # Selection based on color:                                                # No benefit from morphological closing (tested)
+    # Field selection image based on color:                                    # No benefit from morphological closing (tested)
     imselect = cv2.inRange(rawframe_hsv, np.array([35,0,45]), np.array([120,115,147]))
     cv2.imshow("imselect", imselect)
     
-    # Selection based on brightness:
-    """ KNOWN GOOD CODE, may be used instead of section above
-    imselect = cv2.cvtColor(rawframe_bgr, cv2.COLOR_BGR2GRAY)
-    _, imselect = cv2.threshold(imselect, 110, 255, cv2.THRESH_BINARY_INV)      #No benefit from morphological closing (tested)
+    # Field selection image based on brightness:
+    # KNOWN GOOD CODE, may be used instead of section above
+    #imselect = cv2.cvtColor(rawframe_bgr, cv2.COLOR_BGR2GRAY)
+    #_, imselect = cv2.threshold(imselect, 110, 255, cv2.THRESH_BINARY_INV)     #No benefit from morphological closing (tested)
     #cv2.imshow("imselect", imselect)"""
     
-    # Detecting field corners by testing for minimum Manhattan distance:
-    #print("field")                                                             # For better display on cmd
+    
+    """ TLFC: """
+    # TLSB:
+    detectDistance = (70, 70)
+    tlsb = calculateCornerFromTL(imgray, (0, 0), detectDistance, (1.0,1.5))
+    # Placeholder during development:
+    #tlsb = ( 33, 53)        # 33, 53     41, 45                                # After someone moved the camera / before someone moved the camera
+    
+    # TLWC:
+    # Jump to the center by 25px on the x-axis only, so that we are past the support beams:
+    tlsb = (tlsb[0] + 25, tlsb[1])
+    detectDistance = (25, 25)
+    tlwc = calculateCornerFromTL(imgray, tlsb, detectDistance)
+    # Placeholder during development:
+    #tlwc = ( 71,  51)       # 69,  51    71,  47                               # After someone moved the camera / before someone moved the camera
+
+    # TLFC
+    # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
+    tlwc = (tlwc[0] + 5, tlwc[1] + 5)
     detectDistance = (20, 20)
     tlfc = calculateCornerFromTL(imselect, tlwc, detectDistance)
+    
+    # TODO Manual correction:
+
+
+    """ BLFC: """
+    # BLSB:
+    detectDistance = (70, 70)
+    blsb = calculateCornerFromBL(imgray, (0, imgray.shape[0] -1), detectDistance, (1.0,1.5)) # Actually top left of wall corner
+    # Placeholder during development:
+    #blsb = ( 20,181)        # 21,188     20,181
+
+    # BLWC:
+    # Jump to the center by 25px on the x-axis only, so that we are past the support beams:
+    blsb = (blsb[0] + 25, blsb[1])
+    detectDistance = (25, 25)
+    blwc = calculateCornerFromTL(imgray, blsb, detectDistance)
+    # Placeholder during development:
+    #blwc = ( 58, 192)       # 58, 192    59, 188
+    
+    # BLFC:
+    # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
+    blwc = (blwc[0] + 5, blwc[1])                                              # upwards offset causes the field corner to move as well (little height difference)
+    detectDistance = (20, 20)
     blfc = calculateCornerFromBL(imselect, blwc, detectDistance)
+    
+    # TODO Manual correction:
+    
+    
+    """ TRFC: """
+    # TRSB:
+    detectDistance = (70, 70)
+    trsb = calculateCornerFromTR(imgray, (imgray.shape[1] -16, 0), detectDistance) # Needs to start 15px left from the right corner, because otherwise it will detect the cable conduit underneath the window
+    # Placeholder during development:
+    #trsb = (339, 62)        #339, 62    338, 58
+    
+    # TRWC:
+    # Jump to the center by 25px on the x-axis only, so that we are past the support beams:
+    trsb = (trsb[0] - 25, trsb[1])
+    detectDistance = (25, 25)
+    trwc = calculateCornerFromTR(imgray, trsb, detectDistance)
+    if trwc is None:
+        trwc = calculateCornerFromBR(imgray, trsb, detectDistance)
+    # Placeholder during development:
+    #trwc = (309,  62)       #309,  61   312,  60
+    
+    # TRFC:
+    # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
+    trwc = (trwc[0] - 5, trwc[1] + 5)
+    detectDistance = (20, 20)
     trfc = calculateCornerFromTR(imselect, trwc, detectDistance)
+    
+    # TODO Manual correction:
+    
+    
+    """ BRFC: """
+    # BRSB:
+    detectDistance = (70, 70)
+    brsb = calculateCornerFromBR(imgray, (imgray.shape[1] -16, imgray.shape[0] -1), detectDistance)
+    # Use these as placeholders for the wall corners during development:
+    #brsb = (335,210)        #335,210    338,206
+    
+    # BRWC:
+    # Jump to the center by 25px on the x-axis only, so that we are past the support beams:
+    brsb = (brsb[0] - 25, brsb[1])
+    detectDistance = (25, 25)
+    brwc = calculateCornerFromBR(imgray, brsb, detectDistance)
+    # Use these as placeholders for the wall corners during development:
+    #brwc = (307, 202)       #307, 203   307, 202
+    
+    # BRFC:
+    # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
+    brwc = (brwc[0] - 5, brwc[1] - 6)
+    detectDistance = (20, 20)
     brfc = calculateCornerFromBR(imselect, brwc, detectDistance)
-
-
+    
+    # TODO Manual correction:
+    
+    
     """ Calculating the projection matrix: """
     # Use these as placeholders for the field corners during development:
     #tlfc = ( 74,  53)      # 78,  57    80,  54                                # After someone moved the camera / before someone moved the camera
     #blfc = ( 65, 187)      # 68, 186    69, 182
     #trfc = (305,  65)      #301,  68   303,  67
     #brfc = (303, 197)      #299, 196   300, 195
+    print(tlfc, blfc, trfc, brfc)
     
     # Generate field corner source list (assuming the corners are found):
     #print(tlfc, blfc, trfc, brfc)
