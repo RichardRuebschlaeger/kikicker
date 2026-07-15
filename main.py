@@ -54,8 +54,9 @@ def main():
     choice = input("\nSelect option (1/2/3): ").strip()
     
     try:
-        rawframe_hsv = camera.capture()
-        P = calculateProjectionMatrix(rawframe_hsv)
+        rawframe_hsv = camera.captureHSV()
+        rawframe_bgr = camera.captureBGR()
+        P = calculateProjectionMatrix(rawframe_hsv, rawframe_bgr)
         
         if choice == '1':
             print("\nCapturing single frame. Press any key to stop")
@@ -71,7 +72,7 @@ def main():
             
             while True:
                 frame_number += 1
-                rawframe_hsv = camera.capture()
+                rawframe_hsv = camera.captureHSV()
                 ballpos_mm = detect_ball(rawframe_hsv, P)
                 output_position(ballpos_mm)
                 
@@ -95,7 +96,7 @@ def main():
             lastResetFrames = 0
             lastResetTime_unix = time.time()
             for frame_number in range(1, num_frames):
-                rawframe_hsv = camera.capture()
+                rawframe_hsv = camera.captureHSV()
                 ballpos_mm = detect_ball(rawframe_hsv, P)
                 output_position(ballpos_mm)
                 

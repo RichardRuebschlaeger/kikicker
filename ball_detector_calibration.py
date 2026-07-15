@@ -208,16 +208,13 @@ def manualCornerCorrection(rawframe_bgr, detectedCorner, corner):
         The image in which the corner is to be selected.
     detectedCorner : tuple(int, int) or None
         The automatically detected corner used as a hint. None if none was detected. Used to determine the displayed text.
-    corner : str, "TLFC", "BLFC", "TRFC", "BRFC" or other name
-        The corner to be selected. Used to determine the displayed text.
+    corner : str
+        The proper name of corner to be selected. Used to determine the displayed text.
 
     Returns
     -------
     tuple(int, int)
         The new field corner coordinates. The same as detectedCorner if no correction was deemed necessary.
-        
-    TODO:
-        -Reduce conversions BGR->HSV->BGR from file camera handler?
     """
     def drawCross(img, colour, center)->None:
         """
@@ -280,19 +277,7 @@ def manualCornerCorrection(rawframe_bgr, detectedCorner, corner):
             drawCross(rawframe_bgr, [0,255,0], detectedCorner)
             cv2.imshow("Manual corner correction", rawframe_bgr)
     
-    cornerstr = None
-    if corner == "TLFC":
-        cornerstr = "top left"
-    elif corner == "BLFC":
-        cornerstr = "bottom left"
-    elif corner == "TRFC":
-        cornerstr = "top right"
-    elif corner == "BRFC":
-        cornerstr = "bottom right"
-    else:
-        cornerstr = corner
-    
-    print(f"Manually correct {cornerstr} corner using left-click, confirm by pressing 'q'. If the corner is already correct, just press 'q'")
+    print(f"Manually correct {corner} corner using left-click, confirm by pressing 'q'. If the corner is already correct, just press 'q'")
     drawCross(rawframe_bgr, [0,255,0], detectedCorner)
     cv2.imshow("Manual corner correction", rawframe_bgr)
     cv2.setMouseCallback("Manual corner correction", click_event)
@@ -304,7 +289,7 @@ def manualCornerCorrection(rawframe_bgr, detectedCorner, corner):
 
 
 
-def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
+def calculateProjectionMatrix(rawframe_hsv, rawframe_bgr, fieldSize_mm=(1200, 680)):
     """
     Calculates the projection matrix required to project the passed image, so that the field corners are the new image corners.
 
@@ -312,6 +297,8 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     ----------
     rawframe_hsv : numpy.ndarray
         The image in HSV from which the ball position is to be determined.
+    rawframe_bgr : numpy.ndarray
+        The image in BGR used for manual correction
     fieldSize_mm : tuple(int, int), optional
         The size of the playing field measures in millimeters. The default is (1200, 680) or 120cm x 68cm.
         Used for calibration and to calculate the size of intermediate images.
@@ -391,7 +378,7 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     
     """ Preparation: """
     # Grayscale image for wall detection:
-    _, _, imgray = cv2.split(rawframe_hsv)                                     # V-channel effectively is grayscale image -> grayscale conversion should be cheap
+    _, _, imgray = cv2.split(rawframe_hsv)                                     # V-channel effectively is grayscale image -> grayscale conversion should be cheap # Just found out: Appears to be not. try rawframe[:,:,2]
     _, imgray = cv2.threshold(imgray, 120, 255, cv2.THRESH_BINARY)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))                  # Benefits from morphological opening (tested)
     imgray = cv2.erode(imgray, kernel)
@@ -431,7 +418,7 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     tlfc = calculateCornerFromTL(imselect, tlwc, detectDistance)
     
     # Manual correction:
-    tlfc = manualCornerCorrection(rawframe_hsv, tlfc, "TLFC")
+    tlfc = manualCornerCorrection(rawframe_bgr, tlfc, "top left")
 
 
     """ BLFC: """
@@ -456,7 +443,7 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     blfc = calculateCornerFromBL(imselect, blwc, detectDistance)
     
     # Manual correction:
-    blfc = manualCornerCorrection(rawframe_hsv, blfc, "BLFC")
+    blfc = manualCornerCorrection(rawframe_bgr, blfc, "bottom left")
     
     
     """ TRFC: """
@@ -483,7 +470,7 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     trfc = calculateCornerFromTR(imselect, trwc, detectDistance)
     
     # Manual correction:
-    trfc = manualCornerCorrection(rawframe_hsv, trfc, "TRFC")
+    trfc = manualCornerCorrection(rawframe_bgr, trfc, "top right")
     
     
     """ BRFC: """
@@ -508,7 +495,7 @@ def calculateProjectionMatrix(rawframe_hsv, fieldSize_mm=(1200, 680)):
     brfc = calculateCornerFromBR(imselect, brwc, detectDistance)
     
     # Manual correction:
-    brfc = manualCornerCorrection(rawframe_hsv, brfc, "BRFC")
+    brfc = manualCornerCorrection(rawframe_bgr, brfc, "bottom right")
     
     
     """ Calculating the projection matrix: """

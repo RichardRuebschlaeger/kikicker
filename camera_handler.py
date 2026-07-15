@@ -18,7 +18,8 @@ class CameraHandler:
         self.frame_width = frame_width
         self.frame_height = frame_height
         self.image_path = image_path
-        self.test_image = None
+        self.test_image_bgr = None
+        self.test_image_hsv = None
         self.cap = None
         self.picam2 = None
         
@@ -27,10 +28,10 @@ class CameraHandler:
         
         # Image mode
         if self.camera_type == 'image':
-            self.test_image = cv2.imread(self.image_path)
-            if self.test_image is not None:
-                self.test_image = cv2.resize(self.test_image, (self.frame_width, self.frame_height))
-                self.test_image = cv2.cvtColor(self.test_image, cv2.COLOR_BGR2HSV)
+            self.test_image_bgr = cv2.imread(self.image_path)
+            if self.test_image_bgr is not None:
+                self.test_image_bgr = cv2.resize(self.test_image_bgr, (self.frame_width, self.frame_height))
+                self.test_image_hsv = cv2.cvtColor(self.test_image_bgr, cv2.COLOR_BGR2HSV)
                 print(f"Image loaded: {self.image_path}")
                 return True
             print(f"Failed to load image: {self.image_path}")
@@ -74,10 +75,24 @@ class CameraHandler:
             print("No camera found")
             return False
     
-    def capture(self):
+    def captureBGR(self):
         """Capture a single frame."""
-        if self.test_image is not None:
-            return self.test_image.copy()
+        if self.test_image_bgr is not None:
+            return self.test_image_bgr.copy()
+        
+        if self.cap is not None:
+            ret, frame = self.cap.read()
+            return cv2.cvtColor(frame, cv2.COLOR_RGB2BGR) if ret else None     # Assunimg RGB color for USB-cam
+        
+        if self.picam2 is not None:
+            rgb = self.picam2.capture_array()
+            return cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+    
+        
+    def captureHSV(self):
+        """Capture a single frame."""
+        if self.test_image_hsv is not None:
+            return self.test_image_hsv.copy()
         
         if self.cap is not None:
             ret, frame = self.cap.read()
@@ -87,7 +102,6 @@ class CameraHandler:
             rgb = self.picam2.capture_array()
             return cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
         
-        return None
 
     def release(self):
         if self.cap:

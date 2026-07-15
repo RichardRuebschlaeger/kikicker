@@ -59,7 +59,7 @@ def detect_ball(rawframe_hsv, projection, fieldSize_mm=(1200,680)):
         # Calculate ball position in pixel coordinates (Mm00 normally around 330k):
         x = int(M["m10"] / Mm00)
         y = int(M["m01"] / Mm00)
-        print(f"x={x} y={y}")
+        #print(f"x={x} y={y}")
         
         # Convert pixel coordinates to field coordinates:
         ballpos_mm = (x - (fieldSize_mm[0] / 2.0), y - (fieldSize_mm[1] / 2.0))
