@@ -112,7 +112,7 @@ def calculateCornerFromBL(img_bin, startAt, detectDistance, bias=(1.0, 1.0)):
     return blc
 
 
-def calculateCornerFromTR(img_bin, startAt, detectDistance, bias=(1.0,1.0)):
+def calculateCornerFromTR(img_bin, startAt, detectDistance, bias=(1.0, 1.0)):
     """
     A helper-function that calculates out the nearest point (corner) of an object in a binary image starting from the top-right using Manhattan distance.
 
@@ -154,7 +154,7 @@ def calculateCornerFromTR(img_bin, startAt, detectDistance, bias=(1.0,1.0)):
     return trc
 
 
-def calculateCornerFromBR(img_bin, startAt, detectDistance, bias=(1.0,1.0)):
+def calculateCornerFromBR(img_bin, startAt, detectDistance, bias=(1.0, 1.0)):
     """
     A helper-function that calculates out the nearest point (corner) of an object in a binary image starting from the bottom-right using Manhattan distance.
 
@@ -198,7 +198,7 @@ def calculateCornerFromBR(img_bin, startAt, detectDistance, bias=(1.0,1.0)):
 
 
 
-def manualCornerCorrection(rawframe_hsv, detectedCorner, corner):
+def manualCornerCorrection(rawframe_bgr, detectedCorner, corner):
     """
     Used for manual corner correction.
 
@@ -208,7 +208,7 @@ def manualCornerCorrection(rawframe_hsv, detectedCorner, corner):
         The image in which the corner is to be selected.
     detectedCorner : tuple(int, int) or None
         The automatically detected corner used as a hint. None if none was detected. Used to determine the displayed text.
-    corner : str
+    corner : str, "TLFC", "BLFC", "TRFC", "BRFC" or other name
         The corner to be selected. Used to determine the displayed text.
 
     Returns
@@ -218,13 +218,88 @@ def manualCornerCorrection(rawframe_hsv, detectedCorner, corner):
         
     TODO:
         -Reduce conversions BGR->HSV->BGR from file camera handler?
-        -Actual point selection
-    
-    Point selection from displayed image:
-        https://blog.finxter.com/5-best-ways-to-display-the-coordinates-of-points-clicked-on-an-image-in-opencv-python/
     """
+    def drawCross(img, colour, center)->None:
+        """
+        Helper function to draw a cross. Has some out-of-bounds handling.
+
+        Parameters
+        ----------
+        img : numpy.ndarray
+            The picture to draw in.
+        colour : numpy.ndarray
+            The colour to draw with.
+        center : tuple(int, int)
+            The center of the cross. Shall not be outside the image.
+
+        Returns
+        -------
+        None
+        """
+        print(img.shape) #y,x
+        sy, sx, _ = img.shape
+        x, y = center
+        
+        xmin = max(0, center[0] - 3)
+        xmax = min(sx -1, center[0] +3)
+        cv2.line(img, (xmin,y), (xmax,y), colour, 1)
+        
+        ymin = max(0, center[1] -3)
+        ymax = min(sy -1, center[1] +3)
+        cv2.line(img, (x,ymin), (x,ymax), colour, 1)
     
-    return ()
+    def click_event(event, x, y, flags, param)->None:
+        """
+        Helper function for handling mouse click events. Overwrites the detected corner coordinates.
+
+        Parameters
+        ----------
+        event : int
+            The key-event.
+        x : int
+            The x-coordinate of the click in the image.
+        y : int
+            The y-coordinate of the click in the image.
+        flags : TYPE
+            DESCRIPTION.
+        param : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None
+        
+        Point selection from displayed image:
+            https://blog.finxter.com/5-best-ways-to-display-the-coordinates-of-points-clicked-on-an-image-in-opencv-python/
+
+        """
+        if event == cv2.EVENT_LBUTTONDOWN:
+            nonlocal detectedCorner
+            drawCross(rawframe_bgr, [0,0,255], detectedCorner)
+            detectedCorner = (x, y)
+            drawCross(rawframe_bgr, [0,255,0], detectedCorner)
+            cv2.imshow("Manual corner correction", rawframe_bgr)
+    
+    cornerstr = None
+    if corner == "TLFC":
+        cornerstr = "top left"
+    elif corner == "BLFC":
+        cornerstr = "bottom left"
+    elif corner == "TRFC":
+        cornerstr = "top right"
+    elif corner == "BRFC":
+        cornerstr = "bottom right"
+    else:
+        cornerstr = corner
+    
+    print(f"Manually correct {cornerstr} corner using left-click, confirm by pressing 'q'. If the corner is already correct, just press 'q'")
+    drawCross(rawframe_bgr, [0,255,0], detectedCorner)
+    cv2.imshow("Manual corner correction", rawframe_bgr)
+    cv2.setMouseCallback("Manual corner correction", click_event)
+    cv2.waitKey(0);
+    cv2.destroyWindow("Manual corner correction")
+    
+    return detectedCorner
 
 
 
