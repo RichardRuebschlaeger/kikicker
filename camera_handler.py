@@ -53,7 +53,8 @@ class CameraHandler:
             if PICAMERA_AVAILABLE:
                 self.picam2 = Picamera2()
                 config = self.picam2.create_preview_configuration(
-                    main={"size": (self.frame_width, self.frame_height)}
+                    main={"size": (self.frame_width, self.frame_height)},
+                    controls={"FrameRate":120.13}
                 )
                 self.picam2.configure(config)
                 self.picam2.start()
