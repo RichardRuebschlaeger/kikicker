@@ -18,6 +18,7 @@ Notes:
         Variables holding points follow this simple scheme: XXYY, where
             -XX is TL (top left), BL (bottom left), TR (top right) and BR (bottom right)
             -YY is FC (field corner), WC (wall corner) and SB (support beam) or simply C for corner and D for destination.
+    -Since the calibration only runs before the first frame of the game and the game only starts after calibration, the performance of the calibration does not really matter, as long as it does not take too much time.
 
 @author: richard
 """
@@ -226,24 +227,24 @@ def manualCornerCorrection(rawframe_bgr, detectedCorner, corner):
             The picture to draw in.
         colour : numpy.ndarray
             The colour to draw with.
-        center : tuple(int, int)
-            The center of the cross. Shall not be outside the image.
+        center : tuple(int, int) or None
+            The center of the cross. Shall not be outside the image. Only draws when not None.
 
         Returns
         -------
         None
         """
-        print(img.shape) #y,x
-        sy, sx, _ = img.shape
-        x, y = center
+        if center is not None:
+            sy, sx, _ = img.shape
+            x, y = center
         
-        xmin = max(0, center[0] - 3)
-        xmax = min(sx -1, center[0] +3)
-        cv2.line(img, (xmin,y), (xmax,y), colour, 1)
+            xmin = max(0, center[0] - 3)
+            xmax = min(sx -1, center[0] +3)
+            cv2.line(img, (xmin,y), (xmax,y), colour, 1)
         
-        ymin = max(0, center[1] -3)
-        ymax = min(sy -1, center[1] +3)
-        cv2.line(img, (x,ymin), (x,ymax), colour, 1)
+            ymin = max(0, center[1] -3)
+            ymax = min(sy -1, center[1] +3)
+            cv2.line(img, (x,ymin), (x,ymax), colour, 1)
     
     def click_event(event, x, y, flags, param)->None:
         """
@@ -291,7 +292,7 @@ def manualCornerCorrection(rawframe_bgr, detectedCorner, corner):
 
 def calculateProjectionMatrix(rawframe_hsv, rawframe_bgr, fieldSize_mm=(1200, 680)):
     """
-    Calculates the projection matrix required to project the passed image, so that the field corners are the new image corners.
+    Calculates the projection matrix required to project the passed image, so that the field corners are the new image corners. Asks for manual confirmation of the detected corners.
 
     Parameters
     ----------
@@ -383,11 +384,11 @@ def calculateProjectionMatrix(rawframe_hsv, rawframe_bgr, fieldSize_mm=(1200, 68
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))                  # Benefits from morphological opening (tested)
     imgray = cv2.erode(imgray, kernel)
     imgray = cv2.dilate(imgray, kernel)
-    cv2.imshow("imgray", imgray)
+    #cv2.imshow("imgray", imgray)
     
     # Field selection image based on color:                                    # No benefit from morphological closing (tested)
     imselect = cv2.inRange(rawframe_hsv, np.array([35,0,45]), np.array([120,115,147]))
-    cv2.imshow("imselect", imselect)
+    #cv2.imshow("imselect", imselect)
     
     # Field selection image based on brightness:
     # KNOWN GOOD CODE, may be used instead of section above
@@ -398,104 +399,117 @@ def calculateProjectionMatrix(rawframe_hsv, rawframe_bgr, fieldSize_mm=(1200, 68
     
     """ TLFC: """
     # TLSB:
-    detectDistance = (70, 70)
-    tlsb = calculateCornerFromTL(imgray, (0, 0), detectDistance, (1.0,1.5))
-    # Placeholder during development:
-    #tlsb = ( 33, 53)        # 33, 53     41, 45                                # After someone moved the camera / before someone moved the camera
+    tlfc = None
+    try:
+        detectDistance = (70, 70)
+        tlsb = calculateCornerFromTL(imgray, (0, 0), detectDistance, (1.0,1.5))
+        # Placeholder during development:
+        #tlsb = ( 33, 53)        # 33, 53     41, 45                            # After someone moved the camera / before someone moved the camera
     
-    # TLWC:
-    # Jump to the center by 25px on the x-axis only, so that we are past the support beams:
-    tlsb = (tlsb[0] + 25, tlsb[1])
-    detectDistance = (25, 25)
-    tlwc = calculateCornerFromTL(imgray, tlsb, detectDistance)
-    # Placeholder during development:
-    #tlwc = ( 71,  51)       # 69,  51    71,  47                               # After someone moved the camera / before someone moved the camera
+        # TLWC:
+        # Jump to the center by 25px on the x-axis only, so that we are past the support beams:
+        tlsb = (tlsb[0] + 25, tlsb[1])
+        detectDistance = (25, 25)
+        tlwc = calculateCornerFromTL(imgray, tlsb, detectDistance)
+        # Placeholder during development:
+        #tlwc = ( 71,  51)       # 69,  51    71,  47                           # After someone moved the camera / before someone moved the camera
 
-    # TLFC
-    # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
-    tlwc = (tlwc[0] + 5, tlwc[1] + 5)
-    detectDistance = (20, 20)
-    tlfc = calculateCornerFromTL(imselect, tlwc, detectDistance)
-    
-    # Manual correction:
-    tlfc = manualCornerCorrection(rawframe_bgr, tlfc, "top left")
+        # TLFC
+        # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
+        tlwc = (tlwc[0] + 5, tlwc[1] + 5)
+        detectDistance = (20, 20)
+        tlfc = calculateCornerFromTL(imselect, tlwc, detectDistance)
+    except:
+        print("oops at TLFC")
+    finally:
+        # Manual correction:
+        tlfc = manualCornerCorrection(rawframe_bgr, tlfc, "top left")
 
 
     """ BLFC: """
-    # BLSB:
-    detectDistance = (70, 70)
-    blsb = calculateCornerFromBL(imgray, (0, imgray.shape[0] -1), detectDistance, (1.0,1.5)) # Actually top left of wall corner
-    # Placeholder during development:
-    #blsb = ( 20,181)        # 21,188     20,181
+    try:
+        # BLSB:
+        detectDistance = (70, 70)
+        blsb = calculateCornerFromBL(imgray, (0, imgray.shape[0] -1), detectDistance, (1.0,1.5)) # Actually top left of wall corner
+        # Placeholder during development:
+        #blsb = ( 20,181)        # 21,188     20,181                            # After someone moved the camera / before someone moved the camera
 
-    # BLWC:
-    # Jump to the center by 25px on the x-axis only, so that we are past the support beams:
-    blsb = (blsb[0] + 25, blsb[1])
-    detectDistance = (25, 25)
-    blwc = calculateCornerFromTL(imgray, blsb, detectDistance)
-    # Placeholder during development:
-    #blwc = ( 58, 192)       # 58, 192    59, 188
+        # BLWC:
+        # Jump to the center by 25px on the x-axis only, so that we are past the support beams:
+        blsb = (blsb[0] + 25, blsb[1])
+        detectDistance = (25, 25)
+        blwc = calculateCornerFromTL(imgray, blsb, detectDistance)
+        # Placeholder during development:
+        #blwc = ( 58, 192)       # 58, 192    59, 188                           # After someone moved the camera / before someone moved the camera
     
-    # BLFC:
-    # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
-    blwc = (blwc[0] + 5, blwc[1])                                              # upwards offset causes the field corner to move as well (little height difference)
-    detectDistance = (20, 20)
-    blfc = calculateCornerFromBL(imselect, blwc, detectDistance)
-    
-    # Manual correction:
-    blfc = manualCornerCorrection(rawframe_bgr, blfc, "bottom left")
+        # BLFC:
+        # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
+        blwc = (blwc[0] + 5, blwc[1])                                          # upwards offset causes the field corner to move as well (little height difference)
+        detectDistance = (20, 20)
+        blfc = calculateCornerFromBL(imselect, blwc, detectDistance)
+    except:
+        print("oops at BLFC")
+    finally:
+        # Manual correction:
+        blfc = manualCornerCorrection(rawframe_bgr, blfc, "bottom left")
     
     
     """ TRFC: """
-    # TRSB:
-    detectDistance = (70, 70)
-    trsb = calculateCornerFromTR(imgray, (imgray.shape[1] -16, 0), detectDistance) # Needs to start 15px left from the right corner, because otherwise it will detect the cable conduit underneath the window
-    # Placeholder during development:
-    #trsb = (339, 62)        #339, 62    338, 58
+    try:
+        # TRSB:
+        detectDistance = (70, 70)
+        trsb = calculateCornerFromTR(imgray, (imgray.shape[1] -16, 0), detectDistance) # Needs to start 15px left from the right corner, because otherwise it will detect the cable conduit underneath the window
+        # Placeholder during development:
+        #trsb = (339, 62)        #339, 62    338, 58                            # After someone moved the camera / before someone moved the camera
     
-    # TRWC:
-    # Jump to the center by 25px on the x-axis only, so that we are past the support beams:
-    trsb = (trsb[0] - 25, trsb[1])
-    detectDistance = (25, 25)
-    trwc = calculateCornerFromTR(imgray, trsb, detectDistance)
-    if trwc is None:
-        trwc = calculateCornerFromBR(imgray, trsb, detectDistance)
-    # Placeholder during development:
-    #trwc = (309,  62)       #309,  61   312,  60
+        # TRWC:
+        # Jump to the center by 25px on the x-axis only, so that we are past the support beams:
+        trsb = (trsb[0] - 25, trsb[1])
+        detectDistance = (25, 25)
+        trwc = calculateCornerFromTR(imgray, trsb, detectDistance)
+        if trwc is None:
+            trwc = calculateCornerFromBR(imgray, trsb, detectDistance)
+        # Placeholder during development:
+        #trwc = (309,  62)       #309,  61   312,  60                           # After someone moved the camera / before someone moved the camera
     
-    # TRFC:
-    # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
-    trwc = (trwc[0] - 5, trwc[1] + 5)
-    detectDistance = (20, 20)
-    trfc = calculateCornerFromTR(imselect, trwc, detectDistance)
-    
-    # Manual correction:
-    trfc = manualCornerCorrection(rawframe_bgr, trfc, "top right")
+        # TRFC:
+        # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
+        trwc = (trwc[0] - 5, trwc[1] + 5)
+        detectDistance = (20, 20)
+        trfc = calculateCornerFromTR(imselect, trwc, detectDistance)
+    except:
+        print("oops at TRFC")
+    finally:
+        # Manual correction:
+        trfc = manualCornerCorrection(rawframe_bgr, trfc, "top right")
     
     
     """ BRFC: """
-    # BRSB:
-    detectDistance = (70, 70)
-    brsb = calculateCornerFromBR(imgray, (imgray.shape[1] -16, imgray.shape[0] -1), detectDistance)
-    # Use these as placeholders for the wall corners during development:
-    #brsb = (335,210)        #335,210    338,206
+    try:
+        # BRSB:
+        detectDistance = (70, 70)
+        brsb = calculateCornerFromBR(imgray, (imgray.shape[1] -16, imgray.shape[0] -1), detectDistance)
+        # Use these as placeholders for the wall corners during development:
+        #brsb = (335,210)        #335,210    338,206                            # After someone moved the camera / before someone moved the camera
     
-    # BRWC:
-    # Jump to the center by 25px on the x-axis only, so that we are past the support beams:
-    brsb = (brsb[0] - 25, brsb[1])
-    detectDistance = (25, 25)
-    brwc = calculateCornerFromBR(imgray, brsb, detectDistance)
-    # Use these as placeholders for the wall corners during development:
-    #brwc = (307, 202)       #307, 203   307, 202
+        # BRWC:
+        # Jump to the center by 25px on the x-axis only, so that we are past the support beams:
+        brsb = (brsb[0] - 25, brsb[1])
+        detectDistance = (25, 25)
+        brwc = calculateCornerFromBR(imgray, brsb, detectDistance)
+        # Use these as placeholders for the wall corners during development:
+        #brwc = (307, 202)       #307, 203   307, 202                           # After someone moved the camera / before someone moved the camera
     
-    # BRFC:
-    # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
-    brwc = (brwc[0] - 5, brwc[1] - 6)
-    detectDistance = (20, 20)
-    brfc = calculateCornerFromBR(imselect, brwc, detectDistance)
-    
-    # Manual correction:
-    brfc = manualCornerCorrection(rawframe_bgr, brfc, "bottom right")
+        # BRFC:
+        # Jump towards center, because otherwise the surrounding area may be detected as a part of the field:
+        brwc = (brwc[0] - 5, brwc[1] - 6)
+        detectDistance = (20, 20)
+        brfc = calculateCornerFromBR(imselect, brwc, detectDistance)
+    except:
+        print("oops at BRFC")
+    finally:
+        # Manual correction:
+        brfc = manualCornerCorrection(rawframe_bgr, brfc, "bottom right")
     
     
     """ Calculating the projection matrix: """
