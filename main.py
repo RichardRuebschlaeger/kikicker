@@ -75,6 +75,7 @@ def main():
                 rawframe_hsv = camera.captureHSV()
                 ballpos_mm = detect_ball(rawframe_hsv, P)
                 output_position(ballpos_mm)
+                cv2.waitKey(1)
                 
                 # Calculate and print FPS:
                 currentTime_unix = time.time()
@@ -99,6 +100,7 @@ def main():
                 rawframe_hsv = camera.captureHSV()
                 ballpos_mm = detect_ball(rawframe_hsv, P)
                 output_position(ballpos_mm)
+                cv2.waitKey(1)
                 
                 # Calculate and print FPS:
                 currentTime_unix = time.time()
