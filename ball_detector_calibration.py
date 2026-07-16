@@ -518,7 +518,7 @@ def calculateProjectionMatrix(rawframe_hsv, rawframe_bgr, fieldSize_mm=(1200, 68
     #blfc = ( 65, 187)      # 68, 186    69, 182
     #trfc = (305,  65)      #301,  68   303,  67
     #brfc = (303, 197)      #299, 196   300, 195
-    print(tlfc, blfc, trfc, brfc)
+    #print(tlfc, blfc, trfc, brfc)
     
     # Generate field corner source list (assuming the corners are found):
     #print(tlfc, blfc, trfc, brfc)
