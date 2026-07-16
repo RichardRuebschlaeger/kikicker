@@ -35,20 +35,21 @@ def detect_ball(rawframe_hsv, projection, fieldSize_mm=(1200,680)):
     https://learnopencv.com/find-center-of-blob-centroid-using-opencv-cpp-python/
     """
     # Display raw frame and the selection mask from the raw frame:
-    #rawSelectionMask = cv2.inRange(rawframe_hsv, np.array([10,120,129]), np.array([40,255,255]))
-    cv2.imshow("raw frame", cv2.cvtColor(rawframe_hsv, cv2.COLOR_HSV2BGR))
-    #cv2.imshow("raw frame selection", rawSelectionMask)
+    rawSelectionMask = cv2.inRange(rawframe_hsv, np.array([10,85,129]), np.array([40,255,255]))
+    #cv2.imshow("raw frame", cv2.cvtColor(rawframe_hsv, cv2.COLOR_HSV2BGR))
+    cv2.imshow("raw frame selection", rawSelectionMask)
     
     # Project and resize image:
-    projectedFrame_hsv = cv2.warpPerspective(rawframe_hsv, projection, fieldSize_mm);
-    cv2.imshow("projected frame", cv2.cvtColor(projectedFrame_hsv, cv2.COLOR_HSV2BGR))
+    #projectedFrame_hsv = cv2.warpPerspective(rawframe_hsv, projection, fieldSize_mm);
+    #cv2.imshow("projected frame", cv2.cvtColor(projectedFrame_hsv, cv2.COLOR_HSV2BGR))
     
     # Get ball position from projected image:
-    projectedSelectionMask = cv2.inRange(projectedFrame_hsv, np.array([10,85,129]), np.array([40,255,255]))
-    cv2.imshow("projected frame selection", projectedSelectionMask)
+    #projectedSelectionMask = cv2.inRange(projectedFrame_hsv, np.array([10,85,129]), np.array([40,255,255]))
+    projectedSelectionMask = cv2.warpPerspective(rawSelectionMask, projection, fieldSize_mm)
+    #cv2.imshow("projected frame selection", projectedSelectionMask)
     M = cv2.moments(projectedSelectionMask)
     Mm00 = M["m00"]
-    print(Mm00)
+    #print(Mm00)
     if Mm00 == 0.0:
         # No orange pixels found -> ball not detected
         ballpos_mm = None
@@ -59,6 +60,8 @@ def detect_ball(rawframe_hsv, projection, fieldSize_mm=(1200,680)):
         # Calculate ball position in pixel coordinates (Mm00 normally around 330k):
         x = int(M["m10"] / Mm00)
         y = int(M["m01"] / Mm00)
+        print(f"x={x} y={y}")
+        #x, y, _ = np.matmul(projection, [x, y, 1])
         #print(f"x={x} y={y}")
         
         # Convert pixel coordinates to field coordinates:
