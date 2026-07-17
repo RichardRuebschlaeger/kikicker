@@ -41,7 +41,7 @@ def detect_ball(rawframe_hsv, projection, fieldSize_mm=(1200,680)):
     # Display raw frame and the selection mask from the raw frame:
     rawSelectionMask = cv2.inRange(rawframe_hsv, np.array([10,85,129]), np.array([40,255,255]))
     #cv2.imshow("raw frame", cv2.cvtColor(rawframe_hsv, cv2.COLOR_HSV2BGR))
-    cv2.imshow("raw frame selection", rawSelectionMask)
+    #cv2.imshow("raw frame selection", rawSelectionMask)
     
     # Project and resize image:
     #projectedFrame_hsv = cv2.warpPerspective(rawframe_hsv, projection, fieldSize_mm);
@@ -49,8 +49,8 @@ def detect_ball(rawframe_hsv, projection, fieldSize_mm=(1200,680)):
     
     # Get ball position from projected image:
     #projectedSelectionMask = cv2.inRange(projectedFrame_hsv, np.array([10,85,129]), np.array([40,255,255]))
-    projectedSelectionMask = cv2.warpPerspective(rawSelectionMask, projection, fieldSize_mm)
-    cv2.imshow("projected frame selection", projectedSelectionMask)
+    #projectedSelectionMask = cv2.warpPerspective(rawSelectionMask, projection, fieldSize_mm)
+    #cv2.imshow("projected frame selection", projectedSelectionMask)
     M = cv2.moments(rawSelectionMask)
     Mm00 = M["m00"]
     #print(Mm00)
