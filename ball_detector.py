@@ -57,7 +57,7 @@ def detect_ball(rawframe_hsv, projection, fieldSize_mm=(1200,680)):
     if Mm00 == 0.0:
         # No orange pixels found -> ball not detected
         ballpos_mm = None
-    elif Mm00 > 1000000:
+    elif Mm00 > 50000:
         # Lots of orange pixels -> hands over the field, can't find ball:
         ballpos_mm = None
     else:
