@@ -9,7 +9,6 @@ Discoveries:
 
 TODOs:
     -There are - if I am not mistaken - 8 possible rotation cases for the kicker table, but this only handles one of them; see the resource pictures. In the future, better rotation handling might be a topic worth exploring.
-    -Bounds checking in helper methods
 
 Notes:
     -Access images as yx, but points are xy
