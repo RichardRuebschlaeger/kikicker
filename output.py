@@ -6,10 +6,10 @@ and serialises all data into the I2C protocol packet defined in the project spec
 
     Field               Size        Notes
     ──────────────────────────────────────────────────────────────
-    X coordinate        2 bytes     int16, mm from left edge
-    Y coordinate        2 bytes     int16, mm from top edge
-    Prev X coordinate   2 bytes     int16
-    Prev Y coordinate   2 bytes     int16
+    X coordinate        2 bytes     int16, mm from field center (negative = left, positive = right)
+    Y coordinate        2 bytes     int16, mm from field center (negative = top, positive = bottom)
+    Prev X coordinate   2 bytes     int16, mm from field center
+    Prev Y coordinate   2 bytes     int16, mm from field center
     Field length        2 bytes     int16, mm  (e.g. 1200)
     Field width         2 bytes     int16, mm  (e.g. 680)
     Ball speed          4 bytes     float32, mm/s
@@ -37,8 +37,8 @@ except ImportError:
     _I2C_AVAILABLE = False
 
 # ── I2C configuration ──────────────────────────────────────────────────────────
-I2C_BUS     = 1      # Raspberry Pi default I2C bus
-I2C_ADDRESS = 0x42   # Target device address – adjust to match your receiver
+I2C_BUS       = 1            # Raspberry Pi default I2C bus (uses GPIO Pins 2 & 3)
+I2C_ADDRESSES = [0x42, 0x43] # Target addresses: 0x42 (Display Group), 0x43 (Feedback Group)
 
 # Sentinel value used when the ball position is unknown (None)
 _NO_BALL_SENTINEL = 0x7FFF   # INT16_MAX
@@ -146,7 +146,7 @@ def _build_packet(x, y, fieldSize_mm: tuple) -> bytes:
 
 
 def _send_i2c(packet: bytes) -> None:
-    """Write the packet to the I2C bus, or print a warning if unavailable."""
+    """Write the packet to the I2C bus (to all target addresses), or print a warning if unavailable."""
     if not _I2C_AVAILABLE:
         # Non-Pi environment – just print the hex for debugging
         print(f"[OUTPUT] I2C unavailable. Packet ({len(packet)}B): "
@@ -155,9 +155,14 @@ def _send_i2c(packet: bytes) -> None:
 
     try:
         with smbus2.SMBus(I2C_BUS) as bus:
-            bus.write_i2c_block_data(I2C_ADDRESS, 0, list(packet))
+            for addr in I2C_ADDRESSES:
+                try:
+                    bus.write_i2c_block_data(addr, 0, list(packet))
+                except OSError as e:
+                    # Catch individual write errors so one failing receiver doesn't block others
+                    print(f"[OUTPUT] I2C write error to address {hex(addr)}: {e}")
     except OSError as e:
-        print(f"[OUTPUT] I2C write error: {e}")
+        print(f"[OUTPUT] I2C bus initialization error: {e}")
 
 
 # ── Public API ─────────────────────────────────────────────────────────────────
@@ -170,7 +175,7 @@ def output_position(ballpos_mm, fieldSize_mm=(1200,680)) -> None:
     Parameters
     ----------
     ballpos_mm : tuple(int, int) or None
-        Current ball position in millimetres from the top-left corner of
+        Current ball position in millimetres relative to the center of
         the playing field, or None when the ball is not detected.
     fieldSize_mm : tuple(int, int), optional
         The size of the playing field measures in millimeters. The default is (1200, 680) or 120cm x 68cm.
