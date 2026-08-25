@@ -1,0 +1,24 @@
+% 1 Slide for program flow
+\subsection{Program Flow}\label{subsection:program_flow}
+    \begin{frame}{Program Flow}
+        \begin{tikzpicture}
+            \node[draw] (main) {main.py};
+            \node[draw, below=of main] (calibrator) {ball\_detector\_calibration.py};
+            \node[draw, above=of main] (camera) {camera\_handler.py};
+            \node[draw, right=of main] (detector) {ball\_detector.py};
+            \node[draw, right=of detector] (output) {output.py};
+            \draw[->] (main.south) -- (calibrator.north) node[midway, right] {Called before first call of detector};
+            \draw[<->] (main.north) -- (camera.south) node[midway, right] {Abstraction of picture source};
+            \draw[->] (main.east) -- (detector.west);
+            \draw[->] (detector.east) -- (output.west);
+        \end{tikzpicture}
+    \end{frame}
+\subsection{}\label{}
+
+% 1-2 Slides for corner detection
+\subsection{Corner Detection}\label{subsection:program_cornerDetection}
+\import{chapters/}{dummy.tex}
+
+% 1 Slide for slide perspective transformation + coordinate calculation
+\subsection{Perspective Transformation}\label{subsection:program_perspctiveTransformation}
+\import{chapters/}{dummy.tex}
