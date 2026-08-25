@@ -1,0 +1,32 @@
+\documentclass{beamer}
+\usepackage{import}
+\usepackage[en-UK]{datetime2}                                       % For compile-date on titlepage
+
+\title{USL Final Presentation}
+
+\begin{document}
+    % Titlepage
+    \begin{frame}
+        \title[ball-tracking]{Table football ball-tracking}
+        \subtitle{USL Final Presentation}
+        \author[Rübschläger, Afzal]{Richard~B.~Rübschläger \and M.~Zain~Afzal}
+        \institute{University of Siegen}
+        \date{\today}
+        \maketitle
+    \end{frame}
+
+    %Table of Contents
+    \begin{frame}{Table of Contents}
+        \tableofcontents
+    \end{frame}
+
+
+    % Dummy-file for testing:
+    \import{chapters/}{dummy.tex}
+    
+    % Dedicated section for questions:                              % No additional slides, because the questions are not known ahead.
+    \section{Q\&A}\label{section:qa}
+    
+    \section{Bibliography}\label{section:bib}
+    \bibliography{references}\bibliographystyle{plain}              % Automagically create the bibliography-section
+\end{document}
