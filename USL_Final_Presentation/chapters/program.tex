@@ -1,24 +1,62 @@
 % 1 Slide for program flow
 \subsection{Program Flow}\label{subsection:program_flow}
-    \begin{frame}{Program Flow}
-        \begin{tikzpicture}
-            \node[draw] (main) {main.py};
-            \node[draw, below=of main] (calibrator) {ball\_detector\_calibration.py};
-            \node[draw, above=of main] (camera) {camera\_handler.py};
-            \node[draw, right=of main] (detector) {ball\_detector.py};
-            \node[draw, right=of detector] (output) {output.py};
-            \draw[->] (main.south) -- (calibrator.north) node[midway, right] {Called before first call of detector};
-            \draw[<->] (main.north) -- (camera.south) node[midway, right] {Abstraction of picture source};
-            \draw[->] (main.east) -- (detector.west);
-            \draw[->] (detector.east) -- (output.west);
-        \end{tikzpicture}
-    \end{frame}
-\subsection{}\label{}
+\begin{frame}{Program Flow}
+    \begin{tikzpicture}
+        \node[draw] (main) {main.py};
+        \node[draw, below=of main] (calibrator) {ball\_detector\_calibration.py};
+        \node[draw, above=of main] (camera) {camera\_handler.py};
+        \node[draw, right=of main] (detector) {ball\_detector.py};
+        \node[draw, right=of detector] (output) {output.py};
+        \draw[->] (main.south) -- (calibrator.north) node[midway, right] {Called before first call of detector};
+        \draw[<->] (main.north) -- (camera.south) node[midway, right] {Abstraction of picture source};
+        \draw[->] (main.east) -- (detector.west);
+        \draw[->] (detector.east) -- (output.west);
+    \end{tikzpicture}
+\end{frame}
 
 % 1-2 Slides for corner detection
 \subsection{Corner Detection}\label{subsection:program_cornerDetection}
-\import{chapters/}{dummy.tex}
+\begin{frame}{Corner Detection}
+    \begin{itemize}
+        \item Algorithm for top-left corner, but applies to all corners when adjusted for direction
+        \begin{itemize}
+            \item Morphological opening used to clean greyscale picture before algorithm
+            \item Use Manhattan-distance to find the closest pixel
+        \end{itemize}
+        \includegraphics[width=0.25\textwidth]{chapters/path\_of\_corner\_detection.png}
+        \begin{enumerate}
+            \item Find top-left corner of support beam in greyscale picture
+            \item Find top-left corner of wall in greyscale picture
+            \item Find top-left corner of field in selection of green colour
+        \end{enumerate}
+        \item Perform manual correction, in case automatic detection fails
+        \item Use \texttt{\href{https://docs.opencv.org/3.4.20/da/d54/group__imgproc__transform.html\#ga8c1ae0e3589a9d77fffc962c49b22043}{cv2.getPerspectiveTransform()}} to calculate projection matrix from field corners
+    \end{itemize}
+\end{frame}
 
 % 1 Slide for slide perspective transformation + coordinate calculation
 \subsection{Perspective Transformation}\label{subsection:program_perspctiveTransformation}
-\import{chapters/}{dummy.tex}
+\begin{frame}{Perspective Transformation}
+    \begin{enumerate}
+        \item Select orange area from HSV picture using \texttt{\href{https://docs.opencv.org/3.4.20/d2/de8/group__core__array.html\#ga48af0ab51e36436c5d04340e036ce981}{cv2.inRange()}}
+        \item Check size of area
+        \begin{itemize}
+            \item size is zero: No ball on field
+            \item normal: Ball found
+            \item very large: Hand over field
+            \item \texttt{\href{https://docs.opencv.org/3.4.20/d3/dc0/group__imgproc__shape.html\#ga556a180f43cab22649c23ada36a8a139}{M = cv2.moments}}
+            \item \texttt{M["m00"]} provides size
+        \end{itemize}
+        \item Calculate center of orange area
+        \begin{itemize}
+            \item \texttt{int(M["m10"] / M["m00"])} to get x-coordinate
+            \item \texttt{int(M["m01"] / M["m00"])} to get y-coordinate
+            \item Future Idea: Detect multiple balls
+        \end{itemize}
+        \item Project center cordinates from image space to field space
+        \begin{itemize}
+            \item Use previously calculated perspective projection matrix
+            \item Apply Translation from top-left alignment to center alignment
+        \end{itemize}
+    \end{enumerate}
+\end{frame}
