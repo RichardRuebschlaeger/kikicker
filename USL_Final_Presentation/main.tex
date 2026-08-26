@@ -5,6 +5,8 @@
 \usetikzlibrary{positioning, fit, arrows.meta, calc}                % For diagrams
 \usepackage{amsmath, amssymb}
 \usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usepackage{graphicx}
 
 
 \begin{document}
@@ -25,14 +27,12 @@
 
 
 1-2 slides Problem introduction
-1 slide Program flow outline (similar to page 3 of midterm presentation)
-1-2 slides corner detection
-1 slide perspective transformation + coordinate calculation
 x slides I²C
+x slides for observations
 
     % Problem definition:
     \section{Problem}\label{section:problem}
-    \import{chapters/}{dummy.tex}
+    \import{chapters/}{problem.tex}
 
     % Program:
     \section{Program}\label{section:program}
@@ -52,4 +52,5 @@ x slides I²C
     % Dedicated section for the bibliography:
     \section{Bibliography}\label{section:bib}
     \bibliography{references}\bibliographystyle{plain}              % Automagically create the bibliography-section
+    \import{chapters/}{dummy.tex}
 \end{document}
