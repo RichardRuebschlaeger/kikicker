@@ -34,6 +34,27 @@
     \end{itemize}
 \end{frame}
 
+\subsection{Challenges with corner detection}\label{subsection:program_challenges}
+\begin{frame}{Challenges with corner detection}
+    \begin{itemize}
+        \item During game
+        \begin{itemize}
+            \item Hands above or in  the field. Fortunately, simple size-based hand detection works reliably.
+            \item Low FPS
+        \end{itemize}
+        \item During calibration
+        \begin{itemize}
+            \item Different lighting conditions are very effective at throwing off greyscale thresholding.
+            \item Bright objects surrounding the table can be detected as corners.
+            \item All challenges that can occur during the game.
+        \end{itemize}
+        \item In general
+        \begin{itemize}
+            \item The camera was moved during development. Test pictures for development taken before the camera was moved are no longer accurate.
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
 % 1 Slide for slide perspective transformation + coordinate calculation
 \subsection{Perspective Transformation}\label{subsection:program_perspctiveTransformation}
 \begin{frame}{Perspective Transformation}
