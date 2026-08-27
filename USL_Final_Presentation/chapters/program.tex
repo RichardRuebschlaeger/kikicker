@@ -39,18 +39,18 @@
     \begin{itemize}
         \item During game
         \begin{itemize}
-            \item Hands above or in  the field. Fortunately, simple size-based hand detection works reliably.
+            \item Hands above or in the field.
             \item Low FPS
         \end{itemize}
         \item During calibration
         \begin{itemize}
             \item Different lighting conditions are very effective at throwing off greyscale thresholding.
-            \item Bright objects surrounding the table can be detected as corners.
-            \item All challenges that can occur during the game.
+            \item Bright objects (and people) surrounding the table can be detected as corners.
+            \item The silver rods throw off brightness based corner detection, prevent morphological closing and opening.
         \end{itemize}
         \item In general
         \begin{itemize}
-            \item The camera was moved during development. Test pictures for development taken before the camera was moved are no longer accurate.
+            \item The camera was moved during development. Test pictures taken for development before the camera was moved are no longer accurate.
         \end{itemize}
     \end{itemize}
 \end{frame}
