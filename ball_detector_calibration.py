@@ -426,6 +426,7 @@ def calculateProjectionMatrix(rawframe_hsv, rawframe_bgr, fieldSize_mm=(1200, 68
 
 
     """ BLFC: """
+    blfc = None
     try:
         # BLSB:
         detectDistance = (70, 70)
@@ -454,6 +455,7 @@ def calculateProjectionMatrix(rawframe_hsv, rawframe_bgr, fieldSize_mm=(1200, 68
     
     
     """ TRFC: """
+    trfc = None
     try:
         # TRSB:
         detectDistance = (70, 70)
@@ -484,6 +486,7 @@ def calculateProjectionMatrix(rawframe_hsv, rawframe_bgr, fieldSize_mm=(1200, 68
     
     
     """ BRFC: """
+    brfc = None
     try:
         # BRSB:
         detectDistance = (70, 70)
