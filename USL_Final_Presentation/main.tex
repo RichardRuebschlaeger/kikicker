@@ -9,6 +9,7 @@
 \usepackage{graphicx}                                               % For including pictures
 \usepackage{wrapfig}                                                % Wrapping text around images
 
+\usetheme{Ilmenau}
 
 \begin{document}
     % Titlepage
@@ -26,13 +27,8 @@
         \tableofcontents
     \end{frame}
 
-
-1-2 slides Problem introduction
-x slides I²C
-x slides for observations
-
     % Problem definition:
-    \section{Problem}\label{section:problem}
+    \section{Goal: Ball Tracking}\label{section:problem}
     \import{chapters/}{problem.tex}
 
     % Program:
@@ -46,9 +42,11 @@ x slides for observations
     % Dummy-file for testing:
     %\import{chapters/}{dummy.tex}
     
-    % Dedicated section for questions:                              % No additional slides, because the questions are not known ahead.
+    % Dedicated section for questions:
     \section{Q\&A}\label{section:qa}
-    \import{chapters/}{dummy.tex}                                   % To NOT forget to add a Q&A frame
+    \begin{frame}{Q\&A}
+        \centering\huge Ask your questions
+    \end{frame}
     
     % Dedicated section for the bibliography:
     \section{Bibliography}\label{section:bib}
