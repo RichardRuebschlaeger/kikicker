@@ -1,0 +1,46 @@
+\subsection{I²C Communication \& Protocol Implementation}\label{subsection:i2c_protocol}
+\begin{frame}{I²C Communication \& Protocol Implementation}
+    \begin{itemize}
+        \item Hardware \& Bus Configuration:
+        \begin{description}
+            \item[Bus \& Physical Pins:] Raspberry Pi default I²C bus via GPIO 2 (Pin 3) and GPIO 3 (Pin 5).
+            \item[Target Slave Groups:] Broadcasting to address 0x42 (Display) and 0x43 (Feedback).
+            \item[Baud Rate:] 9600 Baud
+        \end{description}
+        \item Fault-tolerant state handling:
+        \begin{description}
+            \item[No-Ball Sentinel:] Transmits \texttt{(0x7FFF, 0x7FFF)} when ball is lost or occluded.
+            \item[Goal Cooldown:] Suppresses goal re-triggering for 2.0s to prevent duplicate score events.
+        \end{description}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Data Packet Structure (Little-Endian)}
+    \begin{center}
+        \begin{tabular}{|c|c|c|c|}\hline
+            Bytes   & Field Name        & Data Type & Description \\\hline\hline
+            0--3    & Current X,Y       & 2x uint16 & mm from field center \\\hline
+            4--7    & Previous X,Y      & 2x uint16 & \\\hline
+            8--11   & Field dimensions  & 2x uint16 & 1200mm x 680mm \\\hline
+            12--15  & Ball speed        & float32   & mm/s\\\hline
+            16      & Last possession   & uint8     & \texttt{0x00}=L, \texttt{0x01}=R\\\hline
+            17      & Current score     & uint8     & Upper Nibble: Left \\\hline
+        \end{tabular}
+    \end{center}
+\end{frame}
+
+\subsection{Challenges \& Troubleshooting}\label{subsection:i2c_challenges}
+\begin{frame}{Challenges \& Troubleshooting}
+    \begin{itemize}
+        \item Bus Identification \& Slave Acknowledgement:
+        \begin{description}
+            \item[Issue:] IO-error caused by hardware NACKs when addressing \texttt{0x42} and \texttt{0x43}.
+            \item[Resolution:] Diagnosed activity with \texttt{\href{https://manpages.ubuntu.com/manpages/bionic/man8/i2cdetect.8.html}{i2cdetect -y}} to isolate active addresses and verified routing.
+        \end{description}
+        \item Missing ball coordinate handling:
+        \begin{description}
+            \item[Issue:] Coordinates are \texttt{None} when ball is missing or occluded.
+            \item[Resolution:] Transmitting Sentinel \texttt{0x7FFF} when a coordinate is \texttt{None}.
+        \end{description}
+    \end{itemize}
+\end{frame}
