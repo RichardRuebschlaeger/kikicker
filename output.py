@@ -55,8 +55,8 @@ _state = {
     "_goal_cooldown":  0.0,
 }
 
-_GOAL_COOLDOWN_S = 2.0   # seconds to suppress repeated goal detection
-_GOAL_ZONE_MM    = 20    # ball must be within this many mm of the edge to score
+_GOAL_COOLDOWN_S = 10   # seconds to suppress repeated goal detection
+_GOAL_ZONE_MM    = 1    # ball must be within this many mm of the edge to score
 
 
 def _detect_goal(x: int, fieldSize_mm: tuple) -> None:
