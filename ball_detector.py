@@ -70,6 +70,10 @@ def detect_ball(rawframe_hsv, projection, fieldSize_mm=(1200,680)):
         y = py / pz
         #print(f"x={x} y={y}")
         
+        # Check whether the coordinates are out of bounds:
+        if x < 0 or x > fieldSize_mm[0] or y < 0 or y > fieldSize_mm[1]:
+            return None
+        
         # Convert pixel coordinates to field coordinates:
         ballpos_mm = (x - (fieldSize_mm[0] / 2.0), y - (fieldSize_mm[1] / 2.0))
  
